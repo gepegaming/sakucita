@@ -26,6 +26,15 @@ func fiberErrorHandler(c *fiber.Ctx, err error) error {
 		})
 	}
 
+	// handle errro dari domain
+	var appErr *domain.AppError
+	if errors.As(err, &appErr) {
+		return c.Status(appErr.Code).JSON(domain.ErrorResponse{
+			Message: appErr.Message,
+			Errors:  appErr.Error(),
+		})
+	}
+
 	// fiber error
 	var fe *fiber.Error
 	if errors.As(err, &fe) {

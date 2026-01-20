@@ -2,33 +2,39 @@ package domain
 
 import "errors"
 
+type AppError struct {
+	Code    int    // HTTP Status Code (401, 404, dll)
+	Message string // Pesan untuk user
+	Err     error  // Error asli (optional, untuk logging internal)
+}
+
+func (e *AppError) Error() string {
+	return e.Message
+}
+
+func NewAppError(code int, message string, err error) *AppError {
+	return &AppError{Code: code, Message: message, Err: err}
+}
+
 var (
-	// general
 	ErrInternalServerError = errors.New("internal server error")
-	ErrInvalidContextKey   = errors.New("invalid context key")
+	ErrUnauthorized        = errors.New("unauthorized")
+	ErrNotfound            = errors.New("not found")
+	ErrConflict            = errors.New("conflict")
 
-	// transport layer error
-	ErrInvalidRequest = errors.New("invalid request")
-	ErrForbiden       = errors.New("forbiden request")
-	ErrToomanyrequest = errors.New("too many request")
+	// general
+	ErrMsgInvalidRequest      = "invalid request"
+	ErrMsgInternalServerError = "oops, something went wrong, please try again later"
 
-	// service error
-	ErrUserNotFound      = errors.New("user not found")
-	ErrUserAlreadyExists = errors.New("user already exists")
+	// user domain
+	ErrMsgEmailAlreadyExists    = "email already exists"
+	ErrMsgPhoneAlreadyExists    = "phone already exists"
+	ErrMsgNicknameAlreadyExists = "nickname already exists"
+	ErrMsgUserNotFound          = "user not found"
 
-	ErrMerchantAlreadyExists    = errors.New("merchant already exists")
-	ErrMerchantKYCAlreadyExists = errors.New("merchant already KYC, please wait for approval")
-
-	// jwt error
-	ErrInvalidToken = errors.New("invalid token")
-
-	// auth error
-	ErrInvalidCredentials = errors.New("invalid credentials")
-	ErrUnauthorized       = errors.New("unauthorized")
-	ErrTokenRequired      = errors.New("token required")
-
-	// user error
-	ErrEmailAlreadyExists    = errors.New("email already exist")
-	ErrPhoneAlreadyExists    = errors.New("phone already exist")
-	ErrNicknameAlreadyExists = errors.New("nickname already exist")
+	// auth domain
+	ErrMsgInvalidCredentials = "invalid credentials"
+	ErrMsgSessionNotFound    = "session not found"
+	ErrMsgDeviceIdMissmatch  = "device id missmatch"
+	ErrMsgUnauthorized       = "unauthorized"
 )
