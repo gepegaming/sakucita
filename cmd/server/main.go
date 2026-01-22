@@ -25,11 +25,11 @@ func main() {
 
 	queries := repository.New(databases.postgres)
 
-	security := securityProvider(cfg, log, databases.redis)
-
-	middleware := middlewareProvider(log, security)
+	security := securityProvider(cfg, log)
 
 	services := serviceProvider(cfg, log, databases, queries, security)
+
+	middleware := middlewareProvider(log, security, services)
 
 	serverHttp := ServerHTTPProvider(cfg, log, services, middleware)
 
@@ -37,14 +37,16 @@ func main() {
 }
 
 // middleware provider
-func middlewareProvider(log zerolog.Logger, security *security.Security) *middleware.Middleware {
-	return middleware.NewMiddleware(log, security)
+func middlewareProvider(log zerolog.Logger, security *security.Security, serservices *services) *middleware.Middleware {
+	return middleware.NewMiddleware(log, security, serservices.authService)
 }
 
 // security provider
-func securityProvider(cfg config.App, log zerolog.Logger, rdb *redis.Client) *security.Security {
-	security := security.NewSecurity(cfg, log, rdb)
-	security.LoadRSAKeys(cfg.JWT.KeyDirPath)
+func securityProvider(cfg config.App, log zerolog.Logger) *security.Security {
+	security := security.NewSecurity(cfg, log)
+	if err := security.LoadRSAKeys(cfg.JWT.KeyDirPath); err != nil {
+		panic(err)
+	}
 
 	return security
 }
@@ -56,7 +58,7 @@ type services struct {
 
 func serviceProvider(config config.App, log zerolog.Logger, databases *databases, queries *repository.Queries, security *security.Security) *services {
 	return &services{
-		authService: authService.NewService(databases.postgres, queries, config, security, log),
+		authService: authService.NewService(databases.postgres, databases.redis, queries, config, security, log),
 	}
 }
 

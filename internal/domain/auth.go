@@ -2,6 +2,7 @@ package domain
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -11,6 +12,11 @@ type AuthService interface {
 	LoginLocal(ctx context.Context, req LoginRequest) (*LoginResponse, error)
 	Me(ctx context.Context, userID uuid.UUID) (*UserWithRoles, error)
 	RefreshToken(ctx context.Context, req RefreshRequest) (*RefreshResponse, error)
+
+	// auth policy
+	CheckLoginBan(ctx context.Context, id string) (time.Duration, error)
+	OnLoginFail(ctx context.Context, id string) (time.Duration, error)
+	OnLoginSuccess(ctx context.Context, id string) error
 }
 
 type RegisterRequest struct {

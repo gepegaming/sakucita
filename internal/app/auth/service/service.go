@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 
 	"sakucita/internal/database/repository"
 	"sakucita/internal/domain"
@@ -15,11 +16,13 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/redis/go-redis/v9"
 	"github.com/rs/zerolog"
 )
 
 type service struct {
 	db       *pgxpool.Pool
+	rdb      *redis.Client
 	q        *repository.Queries
 	config   config.App
 	security *security.Security
@@ -28,12 +31,13 @@ type service struct {
 
 func NewService(
 	db *pgxpool.Pool,
+	rdb *redis.Client,
 	q *repository.Queries,
 	config config.App,
 	security *security.Security,
 	log zerolog.Logger,
 ) domain.AuthService {
-	return &service{db, q, config, security, log}
+	return &service{db, rdb, q, config, security, log}
 }
 
 func (s *service) RefreshToken(ctx context.Context, req domain.RefreshRequest) (*domain.RefreshResponse, error) {
@@ -135,7 +139,24 @@ func (s *service) Me(ctx context.Context, userID uuid.UUID) (*domain.UserWithRol
 }
 
 func (s *service) LoginLocal(ctx context.Context, req domain.LoginRequest) (*domain.LoginResponse, error) {
-	// check ban user attemp
+	// check ban user attemp, walau udah pake middleware tp best practice nya gini, karna kedepanya mungkin pake grpc
+	ttl, err := s.CheckLoginBan(ctx, req.Email)
+	if err != nil {
+		return nil, domain.NewAppError(
+			fiber.StatusInternalServerError,
+			domain.ErrMsgInternalServerError,
+			domain.ErrInternalServerError,
+		)
+	}
+
+	if ttl > 0 {
+		return nil, domain.NewAppError(
+			fiber.StatusTooManyRequests,
+			fmt.Sprintf("too many attempts. please wait after %s", ttl),
+			domain.ErrTooManyRequests,
+		)
+	}
+
 	// get user identity
 	authIdentity, err := s.q.GetAuthIdentityByEmail(ctx, req.Email)
 	if err != nil {
@@ -143,6 +164,8 @@ func (s *service) LoginLocal(ctx context.Context, req domain.LoginRequest) (*dom
 	}
 	// compare password
 	if !utils.CheckPassword(req.Password, authIdentity.PasswordHash.String) {
+		// kalo gagal login, tambahin counter attempt
+		_, _ = s.OnLoginFail(ctx, req.Email)
 		return nil, domain.NewAppError(fiber.StatusUnauthorized, domain.ErrMsgInvalidCredentials, domain.ErrUnauthorized)
 	}
 	// get user

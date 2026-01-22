@@ -21,6 +21,7 @@ var (
 	ErrUnauthorized        = errors.New("unauthorized")
 	ErrNotfound            = errors.New("not found")
 	ErrConflict            = errors.New("conflict")
+	ErrTooManyRequests     = errors.New("too many requests")
 
 	// general
 	ErrMsgInvalidRequest      = "invalid request"
