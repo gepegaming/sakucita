@@ -23,11 +23,12 @@ SELECT * FROM users WHERE email = $1 AND deleted_at IS NULL;
 
 -- name: CreateUser :one
 INSERT INTO users (
+  id,
   email,
   phone,
   name,
   nickname
 ) VALUES (
-  $1, $2, $3, $4
+  $1, $2, $3, $4, $5
 ) RETURNING *;
 

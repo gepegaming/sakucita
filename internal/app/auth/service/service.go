@@ -273,7 +273,13 @@ func (s *service) RegisterLocal(ctx context.Context, req domain.RegisterRequest)
 	qtx := s.q.WithTx(tx)
 
 	// create user
+	id, err := utils.GenerateUUIDV7()
+	if err != nil {
+		s.log.Err(err).Msg("failed to generate uuid v7")
+		return domain.NewAppError(fiber.StatusInternalServerError, domain.ErrMsgInternalServerError, domain.ErrInternalServerError)
+	}
 	user, err := qtx.CreateUser(ctx, repository.CreateUserParams{
+		ID:       id,
 		Email:    req.Email,
 		Phone:    utils.StringToPgTypeText(req.Phone),
 		Name:     req.Name,

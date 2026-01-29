@@ -5,10 +5,273 @@
 package repository
 
 import (
+	"database/sql/driver"
+	"fmt"
+
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 	"sakucita/internal/domain"
 )
+
+type DonationMediaType string
+
+const (
+	DonationMediaTypeNONE    DonationMediaType = "NONE"
+	DonationMediaTypeTTS     DonationMediaType = "TTS"
+	DonationMediaTypeYOUTUBE DonationMediaType = "YOUTUBE"
+)
+
+func (e *DonationMediaType) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = DonationMediaType(s)
+	case string:
+		*e = DonationMediaType(s)
+	default:
+		return fmt.Errorf("unsupported scan type for DonationMediaType: %T", src)
+	}
+	return nil
+}
+
+type NullDonationMediaType struct {
+	DonationMediaType DonationMediaType
+	Valid             bool // Valid is true if DonationMediaType is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullDonationMediaType) Scan(value interface{}) error {
+	if value == nil {
+		ns.DonationMediaType, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.DonationMediaType.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullDonationMediaType) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.DonationMediaType), nil
+}
+
+type LedgerEntryType string
+
+const (
+	LedgerEntryTypeDEPOSIT    LedgerEntryType = "DEPOSIT"
+	LedgerEntryTypeWITHDRAW   LedgerEntryType = "WITHDRAW"
+	LedgerEntryTypeTRANSFER   LedgerEntryType = "TRANSFER"
+	LedgerEntryTypeFEE        LedgerEntryType = "FEE"
+	LedgerEntryTypeREFUND     LedgerEntryType = "REFUND"
+	LedgerEntryTypeADJUSTMENT LedgerEntryType = "ADJUSTMENT"
+)
+
+func (e *LedgerEntryType) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = LedgerEntryType(s)
+	case string:
+		*e = LedgerEntryType(s)
+	default:
+		return fmt.Errorf("unsupported scan type for LedgerEntryType: %T", src)
+	}
+	return nil
+}
+
+type NullLedgerEntryType struct {
+	LedgerEntryType LedgerEntryType
+	Valid           bool // Valid is true if LedgerEntryType is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullLedgerEntryType) Scan(value interface{}) error {
+	if value == nil {
+		ns.LedgerEntryType, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.LedgerEntryType.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullLedgerEntryType) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.LedgerEntryType), nil
+}
+
+type LedgerSourceType string
+
+const (
+	LedgerSourceTypeTRANSACTION LedgerSourceType = "TRANSACTION"
+	LedgerSourceTypeLEDGER      LedgerSourceType = "LEDGER"
+)
+
+func (e *LedgerSourceType) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = LedgerSourceType(s)
+	case string:
+		*e = LedgerSourceType(s)
+	default:
+		return fmt.Errorf("unsupported scan type for LedgerSourceType: %T", src)
+	}
+	return nil
+}
+
+type NullLedgerSourceType struct {
+	LedgerSourceType LedgerSourceType
+	Valid            bool // Valid is true if LedgerSourceType is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullLedgerSourceType) Scan(value interface{}) error {
+	if value == nil {
+		ns.LedgerSourceType, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.LedgerSourceType.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullLedgerSourceType) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.LedgerSourceType), nil
+}
+
+type MediaProvider string
+
+const (
+	MediaProviderYOUTUBE MediaProvider = "YOUTUBE"
+)
+
+func (e *MediaProvider) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = MediaProvider(s)
+	case string:
+		*e = MediaProvider(s)
+	default:
+		return fmt.Errorf("unsupported scan type for MediaProvider: %T", src)
+	}
+	return nil
+}
+
+type NullMediaProvider struct {
+	MediaProvider MediaProvider
+	Valid         bool // Valid is true if MediaProvider is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullMediaProvider) Scan(value interface{}) error {
+	if value == nil {
+		ns.MediaProvider, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.MediaProvider.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullMediaProvider) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.MediaProvider), nil
+}
+
+type TransactionStatus string
+
+const (
+	TransactionStatusPENDING  TransactionStatus = "PENDING"
+	TransactionStatusPAID     TransactionStatus = "PAID"
+	TransactionStatusFAILED   TransactionStatus = "FAILED"
+	TransactionStatusEXPIRED  TransactionStatus = "EXPIRED"
+	TransactionStatusREFUNDED TransactionStatus = "REFUNDED"
+)
+
+func (e *TransactionStatus) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = TransactionStatus(s)
+	case string:
+		*e = TransactionStatus(s)
+	default:
+		return fmt.Errorf("unsupported scan type for TransactionStatus: %T", src)
+	}
+	return nil
+}
+
+type NullTransactionStatus struct {
+	TransactionStatus TransactionStatus
+	Valid             bool // Valid is true if TransactionStatus is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullTransactionStatus) Scan(value interface{}) error {
+	if value == nil {
+		ns.TransactionStatus, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.TransactionStatus.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullTransactionStatus) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.TransactionStatus), nil
+}
+
+type WalletType string
+
+const (
+	WalletTypeCASH     WalletType = "CASH"
+	WalletTypePENDING  WalletType = "PENDING"
+	WalletTypePLATFORM WalletType = "PLATFORM"
+)
+
+func (e *WalletType) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = WalletType(s)
+	case string:
+		*e = WalletType(s)
+	default:
+		return fmt.Errorf("unsupported scan type for WalletType: %T", src)
+	}
+	return nil
+}
+
+type NullWalletType struct {
+	WalletType WalletType
+	Valid      bool // Valid is true if WalletType is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullWalletType) Scan(value interface{}) error {
+	if value == nil {
+		ns.WalletType, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.WalletType.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullWalletType) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.WalletType), nil
+}
 
 type AuthIdentity struct {
 	ID           uuid.UUID
@@ -23,6 +286,26 @@ type AuthIdentity struct {
 	CreatedAt    pgtype.Timestamptz
 	UpdatedAt    pgtype.Timestamptz
 	DeletedAt    pgtype.Timestamptz
+}
+
+type DonationMessage struct {
+	ID                   uuid.UUID
+	StreamerUserID       uuid.UUID
+	DonorName            pgtype.Text
+	Message              pgtype.Text
+	IsAnonymous          bool
+	MediaType            DonationMediaType
+	TtsLanguage          pgtype.Text
+	TtsVoice             pgtype.Text
+	MediaProvider        NullMediaProvider
+	MediaVideoID         pgtype.Text
+	MediaStartSeconds    pgtype.Int4
+	MediaEndSeconds      pgtype.Int4
+	MediaDurationSeconds pgtype.Int4
+	PlayedAt             pgtype.Timestamptz
+	Status               string
+	Meta                 []byte
+	CreatedAt            pgtype.Timestamptz
 }
 
 type Role struct {
@@ -40,6 +323,27 @@ type Session struct {
 	Meta           domain.JSONB
 	CreatedAt      pgtype.Timestamptz
 	LastUsedAt     pgtype.Timestamptz
+}
+
+type Transaction struct {
+	ID                uuid.UUID
+	DonationMessageID uuid.UUID
+	PayerUserID       pgtype.UUID
+	PayeeUserID       uuid.UUID
+	Amount            int64
+	FeeFixed          int64
+	FeePercentage     pgtype.Numeric
+	FeeAmount         int64
+	NetAmount         int64
+	RoundingAmount    pgtype.Numeric
+	RoundingStrategy  string
+	Currency          string
+	Status            TransactionStatus
+	ExternalReference pgtype.Text
+	Meta              []byte
+	CreatedAt         pgtype.Timestamptz
+	PaidAt            pgtype.Timestamptz
+	SettledAt         pgtype.Timestamptz
 }
 
 type User struct {
@@ -60,4 +364,31 @@ type User struct {
 type UserRole struct {
 	UserID uuid.UUID
 	RoleID int32
+}
+
+type Wallet struct {
+	ID        uuid.UUID
+	UserID    uuid.UUID
+	Type      WalletType
+	Name      string
+	Slug      string
+	Balance   int64
+	CreatedAt pgtype.Timestamptz
+}
+
+type WalletLedgerEntry struct {
+	ID            uuid.UUID
+	WalletID      uuid.UUID
+	EntryType     LedgerEntryType
+	Amount        int64
+	Currency      string
+	SourceType    LedgerSourceType
+	SourceID      uuid.UUID
+	FeeFixed      int64
+	FeePercentage pgtype.Numeric
+	FeeAmount     int64
+	NetAmount     int64
+	Description   pgtype.Text
+	Meta          []byte
+	CreatedAt     pgtype.Timestamptz
 }

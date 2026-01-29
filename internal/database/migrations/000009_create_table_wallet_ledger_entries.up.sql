@@ -13,7 +13,7 @@ CREATE TYPE ledger_source_type AS ENUM (
 );
 
 CREATE TABLE wallet_ledger_entries (
-  id UUID PRIMARY KEY DEFAULT uuidv7(),
+  id UUID PRIMARY KEY,
 
   wallet_id UUID NOT NULL
     REFERENCES wallets(id),

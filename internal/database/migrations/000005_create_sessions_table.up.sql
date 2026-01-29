@@ -1,5 +1,5 @@
 CREATE TABLE sessions (
-  id               UUID PRIMARY KEY DEFAULT uuidv7(),
+  id               UUID PRIMARY KEY,
   user_id          UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
 
   device_id        VARCHAR(128) NOT NULL,

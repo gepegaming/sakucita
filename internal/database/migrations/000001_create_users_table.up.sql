@@ -1,5 +1,5 @@
 CREATE TABLE users (
-  id              UUID PRIMARY KEY DEFAULT uuidv7(),
+  id              UUID PRIMARY KEY,
 
   email           VARCHAR(255) UNIQUE NOT NULL,
   email_verified  BOOLEAN NOT NULL DEFAULT FALSE,

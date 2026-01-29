@@ -14,16 +14,18 @@ import (
 
 const createAuthIdentityLocal = `-- name: CreateAuthIdentityLocal :exec
 INSERT INTO auth_identities (
+  id,
   user_id,
   provider,
   provider_id,
   password_hash
 ) VALUES (
-  $1, $2, $3, $4
+  $1, $2, $3, $4, $5
 )
 `
 
 type CreateAuthIdentityLocalParams struct {
+	ID           uuid.UUID
 	UserID       uuid.UUID
 	Provider     string
 	ProviderID   string
@@ -32,6 +34,7 @@ type CreateAuthIdentityLocalParams struct {
 
 func (q *Queries) CreateAuthIdentityLocal(ctx context.Context, arg CreateAuthIdentityLocalParams) error {
 	_, err := q.db.Exec(ctx, createAuthIdentityLocal,
+		arg.ID,
 		arg.UserID,
 		arg.Provider,
 		arg.ProviderID,

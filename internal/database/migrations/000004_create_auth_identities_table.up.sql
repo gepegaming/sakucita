@@ -1,5 +1,5 @@
 CREATE TABLE auth_identities (
-  id             UUID PRIMARY KEY DEFAULT uuidv7(),
+  id             UUID PRIMARY KEY,
   user_id        UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
 
   provider       VARCHAR(20) NOT NULL,   -- local, google, phone

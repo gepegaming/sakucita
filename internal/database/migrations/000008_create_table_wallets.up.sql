@@ -5,7 +5,7 @@ CREATE TYPE wallet_type AS ENUM (
 );
 
 CREATE TABLE wallets (
-  id UUID PRIMARY KEY DEFAULT uuidv7(),
+  id UUID PRIMARY KEY,
 
   user_id UUID NOT NULL,
   type wallet_type NOT NULL,

@@ -59,13 +59,14 @@ func (q *Queries) RevokeSessionByID(ctx context.Context, arg RevokeSessionByIDPa
 
 const upsertSession = `-- name: UpsertSession :one
 INSERT INTO sessions (
+  id,
   user_id,
   device_id,
   refresh_token_id,
   expires_at,
   meta
 ) VALUES (
-  $1, $2, $3, $4, $5
+  $1, $2, $3, $4, $5, $6
 ) 
 ON CONFLICT (user_id, device_id)
 DO UPDATE SET
@@ -78,6 +79,7 @@ RETURNING id, user_id, device_id, refresh_token_id, expires_at, revoked, meta, c
 `
 
 type UpsertSessionParams struct {
+	ID             uuid.UUID
 	UserID         uuid.UUID
 	DeviceID       string
 	RefreshTokenID pgtype.UUID
@@ -87,6 +89,7 @@ type UpsertSessionParams struct {
 
 func (q *Queries) UpsertSession(ctx context.Context, arg UpsertSessionParams) (Session, error) {
 	row := q.db.QueryRow(ctx, upsertSession,
+		arg.ID,
 		arg.UserID,
 		arg.DeviceID,
 		arg.RefreshTokenID,

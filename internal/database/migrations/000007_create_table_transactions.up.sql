@@ -8,24 +8,22 @@ CREATE TYPE transaction_status AS ENUM (
 );
 
 CREATE TABLE transactions (
-  id UUID PRIMARY KEY DEFAULT uuidv7(),
+  id UUID PRIMARY KEY,
 
-  -- actors
+  donation_message_id UUID NOT NULL
+    REFERENCES donation_messages(id) ON DELETE RESTRICT,
+
   payer_user_id UUID NULL,
   payee_user_id UUID NOT NULL,
 
-  -- money (smallest unit)
   amount BIGINT NOT NULL CHECK (amount > 0),
 
-  -- fee config (parameter snapshot)
   fee_fixed BIGINT NOT NULL DEFAULT 0,
   fee_percentage NUMERIC(10,6) NOT NULL DEFAULT 0,
 
-  -- final result
   fee_amount BIGINT NOT NULL,
   net_amount BIGINT NOT NULL,
 
-  -- rounding transparency
   rounding_amount NUMERIC(10,6) NOT NULL DEFAULT 0,
   rounding_strategy VARCHAR(30) NOT NULL DEFAULT 'FLOOR_TO_PLATFORM',
 
@@ -33,7 +31,6 @@ CREATE TABLE transactions (
 
   status transaction_status NOT NULL DEFAULT 'PENDING',
 
-  -- external payment reference
   external_reference VARCHAR(100),
 
   meta JSONB NOT NULL DEFAULT '{}',
@@ -42,7 +39,8 @@ CREATE TABLE transactions (
   paid_at TIMESTAMPTZ,
   settled_at TIMESTAMPTZ,
 
-  CHECK (fee_amount + net_amount = amount)
+  CHECK (fee_amount + net_amount = amount),
+  UNIQUE (donation_message_id)
 );
 
 CREATE INDEX idx_transactions_payee

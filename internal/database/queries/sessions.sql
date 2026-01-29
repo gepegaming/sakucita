@@ -9,13 +9,14 @@ UPDATE sessions SET revoked = TRUE WHERE id = $1 AND user_id = $2;
 
 -- name: UpsertSession :one
 INSERT INTO sessions (
+  id,
   user_id,
   device_id,
   refresh_token_id,
   expires_at,
   meta
 ) VALUES (
-  $1, $2, $3, $4, $5
+  $1, $2, $3, $4, $5, $6
 ) 
 ON CONFLICT (user_id, device_id)
 DO UPDATE SET
