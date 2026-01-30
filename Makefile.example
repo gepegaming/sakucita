@@ -20,7 +20,10 @@ ifneq (,$(wildcard .env))
     export
 endif
 
-.PHONY: sqlc private-pem public-pem migrate-create migrate-up migrate-down migrate-force migrate-version migrate-drop
+.PHONY: tunnel sqlc private-pem public-pem migrate-create migrate-up migrate-down migrate-force migrate-version migrate-drop
+
+tunnel: # create tunnel
+	cloudflared tunnel --url http://localhost:8888
 
 sqlc: # generate sql
 	sqlc generate
