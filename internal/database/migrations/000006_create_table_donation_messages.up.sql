@@ -1,23 +1,27 @@
 CREATE TYPE media_provider AS ENUM (
-  'YOUTUBE'
+  'YOUTUBE',
+  'GIF'
 );
 
 CREATE TYPE donation_media_type AS ENUM (
-  'NONE',
+  'TEXT',
   'TTS',
-  'YOUTUBE'
+  'YOUTUBE',
+  'GIF'
 );
 
 CREATE TABLE donation_messages (
   id UUID PRIMARY KEY,
 
-  streamer_user_id UUID NOT NULL,
+  payee_user_id  UUID NOT NULL,
 
-  donor_name VARCHAR(100),
-  message TEXT,
-  is_anonymous BOOLEAN NOT NULL DEFAULT false,
+  payer_user_id     UUID,
+  payer_name        VARCHAR(100) NOT NULL,
+  message           TEXT NOT NULL,
+  email             VARCHAR(100) NOT NULL,
 
-  media_type donation_media_type NOT NULL DEFAULT 'NONE',
+
+  media_type donation_media_type NOT NULL DEFAULT 'TEXT',
 
   -- TTS
   tts_language VARCHAR(10),

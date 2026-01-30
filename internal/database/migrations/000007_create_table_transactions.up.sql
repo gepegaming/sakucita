@@ -10,10 +10,9 @@ CREATE TYPE transaction_status AS ENUM (
 CREATE TABLE transactions (
   id UUID PRIMARY KEY,
 
-  donation_message_id UUID NOT NULL
-    REFERENCES donation_messages(id) ON DELETE RESTRICT,
+  donation_message_id UUID NOT NULL REFERENCES donation_messages(id) ON DELETE RESTRICT,
 
-  payer_user_id UUID NULL,
+  payer_user_id UUID,
   payee_user_id UUID NOT NULL,
 
   amount BIGINT NOT NULL CHECK (amount > 0),

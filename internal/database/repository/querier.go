@@ -13,6 +13,7 @@ import (
 
 type Querier interface {
 	CreateAuthIdentityLocal(ctx context.Context, arg CreateAuthIdentityLocalParams) error
+	CreateDonationMessage(ctx context.Context, arg CreateDonationMessageParams) (DonationMessage, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
 	CreateUserRole(ctx context.Context, arg CreateUserRoleParams) error
 	GetActiveSessionByTokenID(ctx context.Context, refreshTokenID pgtype.UUID) (Session, error)

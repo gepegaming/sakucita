@@ -16,9 +16,10 @@ import (
 type DonationMediaType string
 
 const (
-	DonationMediaTypeNONE    DonationMediaType = "NONE"
+	DonationMediaTypeTEXT    DonationMediaType = "TEXT"
 	DonationMediaTypeTTS     DonationMediaType = "TTS"
 	DonationMediaTypeYOUTUBE DonationMediaType = "YOUTUBE"
+	DonationMediaTypeGIF     DonationMediaType = "GIF"
 )
 
 func (e *DonationMediaType) Scan(src interface{}) error {
@@ -148,6 +149,7 @@ type MediaProvider string
 
 const (
 	MediaProviderYOUTUBE MediaProvider = "YOUTUBE"
+	MediaProviderGIF     MediaProvider = "GIF"
 )
 
 func (e *MediaProvider) Scan(src interface{}) error {
@@ -290,10 +292,11 @@ type AuthIdentity struct {
 
 type DonationMessage struct {
 	ID                   uuid.UUID
-	StreamerUserID       uuid.UUID
-	DonorName            pgtype.Text
-	Message              pgtype.Text
-	IsAnonymous          bool
+	PayeeUserID          uuid.UUID
+	PayerUserID          pgtype.UUID
+	PayerName            string
+	Message              string
+	Email                string
 	MediaType            DonationMediaType
 	TtsLanguage          pgtype.Text
 	TtsVoice             pgtype.Text
