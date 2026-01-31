@@ -26,7 +26,10 @@ func (s *service) CheckLoginBan(ctx context.Context, id string) (time.Duration, 
 			// key ga ada berarti baru pertama kali coba login
 			return 0, nil
 		}
-		s.log.Error().Err(err).Msg("failed to check login ban ttl")
+		s.log.Error().
+			Err(err).
+			Str("key", banKey(id)).
+			Msg("redis ttl failed")
 		return 0, err
 	}
 

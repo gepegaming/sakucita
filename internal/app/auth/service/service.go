@@ -54,7 +54,10 @@ func (s *service) RefreshToken(ctx context.Context, req domain.RefreshRequest) (
 	// cek kalo device nya beda dari hash device_id maka error
 	deviceID := utils.GenerateDeviceID(req.Claims.UserID, req.ClientInfo)
 	if deviceID != session.DeviceID {
-		s.log.Warn().Msgf("device id missmatch: %v != %v", deviceID, session.DeviceID)
+		s.log.Warn().
+			Str("device_id", deviceID).
+			Str("session_device_id", session.DeviceID).
+			Msg("device id mismatch")
 		return nil, domain.NewAppError(fiber.StatusUnauthorized, domain.ErrMsgDeviceIdMissmatch, domain.ErrUnauthorized)
 	}
 
@@ -105,7 +108,7 @@ func (s *service) RefreshToken(ctx context.Context, req domain.RefreshRequest) (
 func (s *service) Me(ctx context.Context, userID uuid.UUID) (*domain.UserWithRoles, error) {
 	userWithRolesRow, err := s.q.GetUserByIDWithRoles(ctx, userID)
 	if err != nil {
-		s.log.Warn().Err(err).Msg("failed to get user with roles")
+		s.log.Error().Err(err).Msg("failed to get user with roles")
 		return nil, domain.NewAppError(fiber.StatusNotFound, "user not found", domain.ErrNotfound)
 	}
 	// unmarshar role
@@ -249,7 +252,11 @@ func (s *service) LoginLocal(ctx context.Context, req domain.LoginRequest) (*dom
 		},
 	})
 	if err != nil {
-		s.log.Error().Err(err).Msg("failed to create session")
+		s.log.Error().
+			Err(err).
+			Str("user_id", userResponse.ID.String()).
+			Str("device_id", deviceID).
+			Msg("failed to create session")
 		return nil, domain.NewAppError(fiber.StatusInternalServerError, domain.ErrMsgInternalServerError, domain.ErrInternalServerError)
 	}
 
