@@ -163,6 +163,7 @@ func (s *service) LoginLocal(ctx context.Context, req domain.LoginRequest) (*dom
 	// get user identity
 	authIdentity, err := s.q.GetAuthIdentityByEmail(ctx, req.Email)
 	if err != nil {
+		s.log.Error().Err(err).Msg("user not found ges")
 		return nil, domain.NewAppError(fiber.StatusNotFound, domain.ErrMsgUserNotFound, domain.ErrNotfound)
 	}
 	// compare password

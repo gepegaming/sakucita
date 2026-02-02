@@ -4,18 +4,17 @@ INSERT INTO donation_messages (
   payee_user_id,
   payer_user_id,
   payer_name,
-  message,
   email,
+  message,
   media_type,
-  tts_language,
-  tts_voice,
-  media_provider,
-  media_video_id,
+  media_url,
   media_start_seconds,
-  media_end_seconds,
-  media_duration_seconds,
+  charged_seconds,
+  price_per_second,
   played_at,
+  amount,
+  currency,
   meta
 ) VALUES (
-  $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16
+  $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15
 ) RETURNING *;

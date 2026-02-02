@@ -17,7 +17,6 @@ type DonationMediaType string
 
 const (
 	DonationMediaTypeTEXT    DonationMediaType = "TEXT"
-	DonationMediaTypeTTS     DonationMediaType = "TTS"
 	DonationMediaTypeYOUTUBE DonationMediaType = "YOUTUBE"
 	DonationMediaTypeGIF     DonationMediaType = "GIF"
 )
@@ -145,48 +144,6 @@ func (ns NullLedgerSourceType) Value() (driver.Value, error) {
 	return string(ns.LedgerSourceType), nil
 }
 
-type MediaProvider string
-
-const (
-	MediaProviderYOUTUBE MediaProvider = "YOUTUBE"
-	MediaProviderGIF     MediaProvider = "GIF"
-)
-
-func (e *MediaProvider) Scan(src interface{}) error {
-	switch s := src.(type) {
-	case []byte:
-		*e = MediaProvider(s)
-	case string:
-		*e = MediaProvider(s)
-	default:
-		return fmt.Errorf("unsupported scan type for MediaProvider: %T", src)
-	}
-	return nil
-}
-
-type NullMediaProvider struct {
-	MediaProvider MediaProvider
-	Valid         bool // Valid is true if MediaProvider is not NULL
-}
-
-// Scan implements the Scanner interface.
-func (ns *NullMediaProvider) Scan(value interface{}) error {
-	if value == nil {
-		ns.MediaProvider, ns.Valid = "", false
-		return nil
-	}
-	ns.Valid = true
-	return ns.MediaProvider.Scan(value)
-}
-
-// Value implements the driver Valuer interface.
-func (ns NullMediaProvider) Value() (driver.Value, error) {
-	if !ns.Valid {
-		return nil, nil
-	}
-	return string(ns.MediaProvider), nil
-}
-
 type TransactionStatus string
 
 const (
@@ -291,24 +248,23 @@ type AuthIdentity struct {
 }
 
 type DonationMessage struct {
-	ID                   uuid.UUID
-	PayeeUserID          uuid.UUID
-	PayerUserID          pgtype.UUID
-	PayerName            string
-	Message              string
-	Email                string
-	MediaType            DonationMediaType
-	TtsLanguage          pgtype.Text
-	TtsVoice             pgtype.Text
-	MediaProvider        NullMediaProvider
-	MediaVideoID         pgtype.Text
-	MediaStartSeconds    pgtype.Int4
-	MediaEndSeconds      pgtype.Int4
-	MediaDurationSeconds pgtype.Int4
-	PlayedAt             pgtype.Timestamptz
-	Status               string
-	Meta                 []byte
-	CreatedAt            pgtype.Timestamptz
+	ID                uuid.UUID
+	PayeeUserID       uuid.UUID
+	PayerUserID       pgtype.UUID
+	PayerName         string
+	Email             pgtype.Text
+	Message           pgtype.Text
+	MediaType         DonationMediaType
+	MediaUrl          pgtype.Text
+	MediaStartSeconds int32
+	ChargedSeconds    pgtype.Int4
+	PricePerSecond    pgtype.Int8
+	Amount            int64
+	Currency          string
+	Status            string
+	Meta              domain.JSONB
+	PlayedAt          pgtype.Timestamptz
+	CreatedAt         pgtype.Timestamptz
 }
 
 type Role struct {

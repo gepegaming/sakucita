@@ -10,6 +10,7 @@ import (
 	"time"
 
 	authHandlerHTTP "sakucita/internal/app/auth/delivery/http"
+	donationHandler "sakucita/internal/app/donation/delivery/http"
 	"sakucita/internal/domain"
 	"sakucita/internal/server/middleware"
 	"sakucita/pkg/config"
@@ -30,7 +31,8 @@ type Server struct {
 }
 
 type handlers struct {
-	authHandler *authHandlerHTTP.Handler
+	authHandler     *authHandlerHTTP.Handler
+	donationHandler *donationHandler.Handler
 }
 
 func NewServer(
@@ -61,14 +63,15 @@ func NewServer(
 
 	// setup handler
 	authHandler := authHandlerHTTP.NewHandler(config, log, validator, authService, middleware)
-
+	donationHandler := donationHandler.NewHandler(config, log, validator, middleware)
 	return &Server{
 		app:       app,
 		log:       log,
 		config:    config,
 		validator: validator,
 		handlers: handlers{
-			authHandler: authHandler,
+			authHandler:     authHandler,
+			donationHandler: donationHandler,
 		},
 	}
 }
@@ -112,4 +115,5 @@ func (s *Server) mountRoutes() {
 	apiv1 := s.app.Group("/api/v1")
 
 	s.authHandler.Routes(apiv1)
+	s.donationHandler.Routes(apiv1)
 }

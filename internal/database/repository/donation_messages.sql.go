@@ -10,6 +10,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
+	"sakucita/internal/domain"
 )
 
 const createDonationMessage = `-- name: CreateDonationMessage :one
@@ -18,40 +19,38 @@ INSERT INTO donation_messages (
   payee_user_id,
   payer_user_id,
   payer_name,
-  message,
   email,
+  message,
   media_type,
-  tts_language,
-  tts_voice,
-  media_provider,
-  media_video_id,
+  media_url,
   media_start_seconds,
-  media_end_seconds,
-  media_duration_seconds,
+  charged_seconds,
+  price_per_second,
   played_at,
+  amount,
+  currency,
   meta
 ) VALUES (
-  $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16
-) RETURNING id, payee_user_id, payer_user_id, payer_name, message, email, media_type, tts_language, tts_voice, media_provider, media_video_id, media_start_seconds, media_end_seconds, media_duration_seconds, played_at, status, meta, created_at
+  $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15
+) RETURNING id, payee_user_id, payer_user_id, payer_name, email, message, media_type, media_url, media_start_seconds, charged_seconds, price_per_second, amount, currency, status, meta, played_at, created_at
 `
 
 type CreateDonationMessageParams struct {
-	ID                   uuid.UUID
-	PayeeUserID          uuid.UUID
-	PayerUserID          pgtype.UUID
-	PayerName            string
-	Message              string
-	Email                string
-	MediaType            DonationMediaType
-	TtsLanguage          pgtype.Text
-	TtsVoice             pgtype.Text
-	MediaProvider        NullMediaProvider
-	MediaVideoID         pgtype.Text
-	MediaStartSeconds    pgtype.Int4
-	MediaEndSeconds      pgtype.Int4
-	MediaDurationSeconds pgtype.Int4
-	PlayedAt             pgtype.Timestamptz
-	Meta                 []byte
+	ID                uuid.UUID
+	PayeeUserID       uuid.UUID
+	PayerUserID       pgtype.UUID
+	PayerName         string
+	Email             pgtype.Text
+	Message           pgtype.Text
+	MediaType         DonationMediaType
+	MediaUrl          pgtype.Text
+	MediaStartSeconds int32
+	ChargedSeconds    pgtype.Int4
+	PricePerSecond    pgtype.Int8
+	PlayedAt          pgtype.Timestamptz
+	Amount            int64
+	Currency          string
+	Meta              domain.JSONB
 }
 
 func (q *Queries) CreateDonationMessage(ctx context.Context, arg CreateDonationMessageParams) (DonationMessage, error) {
@@ -60,17 +59,16 @@ func (q *Queries) CreateDonationMessage(ctx context.Context, arg CreateDonationM
 		arg.PayeeUserID,
 		arg.PayerUserID,
 		arg.PayerName,
-		arg.Message,
 		arg.Email,
+		arg.Message,
 		arg.MediaType,
-		arg.TtsLanguage,
-		arg.TtsVoice,
-		arg.MediaProvider,
-		arg.MediaVideoID,
+		arg.MediaUrl,
 		arg.MediaStartSeconds,
-		arg.MediaEndSeconds,
-		arg.MediaDurationSeconds,
+		arg.ChargedSeconds,
+		arg.PricePerSecond,
 		arg.PlayedAt,
+		arg.Amount,
+		arg.Currency,
 		arg.Meta,
 	)
 	var i DonationMessage
@@ -79,19 +77,18 @@ func (q *Queries) CreateDonationMessage(ctx context.Context, arg CreateDonationM
 		&i.PayeeUserID,
 		&i.PayerUserID,
 		&i.PayerName,
-		&i.Message,
 		&i.Email,
+		&i.Message,
 		&i.MediaType,
-		&i.TtsLanguage,
-		&i.TtsVoice,
-		&i.MediaProvider,
-		&i.MediaVideoID,
+		&i.MediaUrl,
 		&i.MediaStartSeconds,
-		&i.MediaEndSeconds,
-		&i.MediaDurationSeconds,
-		&i.PlayedAt,
+		&i.ChargedSeconds,
+		&i.PricePerSecond,
+		&i.Amount,
+		&i.Currency,
 		&i.Status,
 		&i.Meta,
+		&i.PlayedAt,
 		&i.CreatedAt,
 	)
 	return i, err
