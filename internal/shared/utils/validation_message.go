@@ -49,6 +49,8 @@ func GenerateMessageValidation(err error) map[string]any {
 				messages[fieldName] = fmt.Sprintf("%s must be one of: [%s]", fieldName, v.Param())
 			case "required":
 				messages[fieldName] = fmt.Sprintf("%s is required", fieldName)
+			case "eq":
+				messages[fieldName] = fmt.Sprintf("%s must be equal to %s", fieldName, v.Param())
 			case "required_if":
 				messages[fieldName] = fmt.Sprintf("%s is required when %s is %s", fieldName, v.Field(), v.Param())
 			case "timezone":
