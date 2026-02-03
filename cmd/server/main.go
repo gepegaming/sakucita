@@ -4,9 +4,10 @@ import (
 	"context"
 
 	authService "sakucita/internal/app/auth/service"
-	"sakucita/internal/database"
-	"sakucita/internal/database/repository"
 	"sakucita/internal/domain"
+	"sakucita/internal/infra/postgres"
+	"sakucita/internal/infra/postgres/repository"
+	redisClient "sakucita/internal/infra/redis"
 	"sakucita/internal/server"
 	"sakucita/internal/server/middleware"
 	"sakucita/internal/server/security"
@@ -69,12 +70,12 @@ type databases struct {
 }
 
 func databaseProvider(cfg config.App, log zerolog.Logger) *databases {
-	pg, err := database.NewDB(context.Background(), cfg, log)
+	pg, err := postgres.NewDB(context.Background(), cfg, log)
 	if err != nil {
 		panic(err)
 	}
 
-	redis, err := database.NewRedisClient(cfg, log)
+	redis, err := redisClient.NewRedisClient(cfg, log)
 	if err != nil {
 		panic(err)
 	}

@@ -9,7 +9,7 @@ DB_PASS ?= root
 DB_SSL_MODE ?= disable
 
 # Migration directory
-MIGRATION_DIR = internal/database/migrations
+MIGRATION_DIR = internal/infra/postgres/migrations
 
 # Construct database URL
 DB_URL = postgres://$(DB_USER):$(DB_PASS)@$(DB_HOST):$(DB_PORT)/$(DB_NAME)?sslmode=$(DB_SSL_MODE)

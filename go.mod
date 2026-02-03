@@ -11,7 +11,10 @@ require (
 	golang.org/x/crypto v0.47.0
 )
 
-require github.com/stretchr/testify v1.11.1
+require (
+	github.com/stretchr/testify v1.11.1
+	resty.dev/v3 v3.0.0-beta.6
+)
 
 require (
 	github.com/andybalholm/brotli v1.2.0 // indirect

@@ -1,12 +1,12 @@
 version: "2"
 sql:
   - engine: "postgresql"
-    schema: "./internal/database/migrations"
-    queries: "./internal/database/queries/*.sql"
+    schema: "./internal/infra/postgres/migrations"
+    queries: "./internal/infra/postgres/queries/*.sql"
     gen:
       go:
         package: "repository"
-        out: "./internal/database/repository"
+        out: "./internal/infra/postgres/repository"
         sql_package: "pgx/v5"
         emit_interface: true
         overrides:

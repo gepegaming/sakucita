@@ -1,8 +1,8 @@
 package service
 
 import (
-	"sakucita/internal/database/repository"
 	"sakucita/internal/domain"
+	"sakucita/internal/infra/postgres/repository"
 
 	"github.com/rs/zerolog"
 )

@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"sakucita/internal/database/repository"
 	"sakucita/internal/domain"
+	"sakucita/internal/infra/postgres/repository"
 	"sakucita/internal/server/security"
 	"sakucita/internal/shared/utils"
 	"sakucita/pkg/config"
