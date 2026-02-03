@@ -45,4 +45,8 @@ type CreateDonationMessageRequest struct {
 	// media input dari user
 	MediaURL          *string `json:"media_url,omitempty" form:"media_url" validate:"omitempty,url"`
 	MediaStartSeconds int     `json:"media_start_seconds,omitempty" form:"media_start_seconds" validate:"min=0"`
+
+	// trasaction
+	Amount         int32  `json:"amount" form:"amount" validate:"required,gte=1000"`
+	PaymentChannel string `json:"payment_channel" form:"payment_channel" validate:"required,eq=QRIS"`
 }

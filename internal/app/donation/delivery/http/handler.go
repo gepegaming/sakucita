@@ -33,8 +33,6 @@ func NewHandler(
 
 func (h *Handler) Routes(r fiber.Router) {
 	r.Route("/donations", func(router fiber.Router) {
-		router.Use(h.mw.WithAuth)
-
 		router.Post("/", h.CreateDonation)
 	})
 }
