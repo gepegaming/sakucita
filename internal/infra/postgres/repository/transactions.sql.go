@@ -216,19 +216,20 @@ func (q *Queries) GetTransactionByID(ctx context.Context, id uuid.UUID) (Transac
 	return i, err
 }
 
-const updateTransactionExternalReference = `-- name: UpdateTransactionExternalReference :exec
+const updateTransactionExternalReferenceAndStatus = `-- name: UpdateTransactionExternalReferenceAndStatus :exec
 UPDATE transactions
-SET external_reference = $2
+SET external_reference = $2, status = $3
 WHERE id = $1
 `
 
-type UpdateTransactionExternalReferenceParams struct {
+type UpdateTransactionExternalReferenceAndStatusParams struct {
 	ID                uuid.UUID
 	ExternalReference pgtype.Text
+	Status            TransactionStatus
 }
 
-func (q *Queries) UpdateTransactionExternalReference(ctx context.Context, arg UpdateTransactionExternalReferenceParams) error {
-	_, err := q.db.Exec(ctx, updateTransactionExternalReference, arg.ID, arg.ExternalReference)
+func (q *Queries) UpdateTransactionExternalReferenceAndStatus(ctx context.Context, arg UpdateTransactionExternalReferenceAndStatusParams) error {
+	_, err := q.db.Exec(ctx, updateTransactionExternalReferenceAndStatus, arg.ID, arg.ExternalReference, arg.Status)
 	return err
 }
 

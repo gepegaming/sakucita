@@ -256,9 +256,10 @@ func (s *service) CreateDonation(
 	 * 9. Update Transaction with External Reference
 	 */
 
-	if err := s.q.UpdateTransactionExternalReference(ctx, repository.UpdateTransactionExternalReferenceParams{
+	if err := s.q.UpdateTransactionExternalReferenceAndStatus(ctx, repository.UpdateTransactionExternalReferenceAndStatusParams{
 		ID:                transactionResult.ID,
 		ExternalReference: utils.StringToPgTypeText(qrisResult.TransactionID),
+		Status:            repository.TransactionStatusPENDING,
 	}); err != nil {
 		s.log.Err(err).Msg("failed to update transaction external reference")
 		return nil, domain.NewAppError(
@@ -277,5 +278,6 @@ func (s *service) CreateDonation(
 		Amount:        transactionResult.GrossPaidAmount,
 		Currency:      transactionResult.Currency,
 		QrString:      qrisResult.QRString,
+		Actions:       qrisResult.Actions,
 	}, nil
 }

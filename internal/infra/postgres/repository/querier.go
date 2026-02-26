@@ -33,7 +33,7 @@ type Querier interface {
 	GetUserFee(ctx context.Context, arg GetUserFeeParams) (GetUserFeeRow, error)
 	RevokeAllSessionsByUserID(ctx context.Context, userID uuid.UUID) error
 	RevokeSessionByID(ctx context.Context, arg RevokeSessionByIDParams) error
-	UpdateTransactionExternalReference(ctx context.Context, arg UpdateTransactionExternalReferenceParams) error
+	UpdateTransactionExternalReferenceAndStatus(ctx context.Context, arg UpdateTransactionExternalReferenceAndStatusParams) error
 	UpdateTransactionStatus(ctx context.Context, arg UpdateTransactionStatusParams) error
 	UpsertSession(ctx context.Context, arg UpsertSessionParams) (Session, error)
 }

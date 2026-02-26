@@ -26,4 +26,8 @@ type CreateDonationResult struct {
 	Amount        int64  `json:"amount"`
 	Currency      string `json:"currency"`
 	QrString      string `json:"qr_string"`
+	Actions       []struct {
+		Name string `json:"name"`
+		Url  string `json:"url"`
+	} `json:"actions,omitempty"`
 }
