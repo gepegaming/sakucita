@@ -5,7 +5,7 @@ CREATE TABLE user_fee_overrides (
   payment_channel_id INT NOT NULL REFERENCES payment_channels(id),
 
   platform_fee_fixed BIGINT NOT NULL DEFAULT 0,
-  platform_fee_percentage BIGINT NOT NULL DEFAULT 0,
+  platform_fee_percentage_bps INT NOT NULL DEFAULT 0,
 
   UNIQUE (user_id, payment_channel_id)
 );

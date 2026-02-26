@@ -6,11 +6,11 @@ CREATE TABLE payment_channels (
 
   -- gateway fee (dari midtrans)
   gateway_fee_fixed BIGINT NOT NULL DEFAULT 0,
-  gateway_fee_percentage BIGINT NOT NULL DEFAULT 0,
+  gateway_fee_percentage_bps INT NOT NULL DEFAULT 0,
 
   -- default platform fee
   platform_fee_fixed BIGINT NOT NULL DEFAULT 0,
-  platform_fee_percentage BIGINT NOT NULL DEFAULT 200,
+  platform_fee_percentage_bps INT NOT NULL DEFAULT 200,
 
   is_active BOOLEAN NOT NULL DEFAULT TRUE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
@@ -18,7 +18,7 @@ CREATE TABLE payment_channels (
 
 
 INSERT INTO payment_channels 
-(code, name, gateway_fee_fixed, gateway_fee_percentage, platform_fee_fixed, platform_fee_percentage, is_active, created_at) 
+(code, name, gateway_fee_fixed, gateway_fee_percentage_bps, platform_fee_fixed, platform_fee_percentage_bps, is_active, created_at) 
 VALUES
 
 -- QRIS (MDR 0.7%)

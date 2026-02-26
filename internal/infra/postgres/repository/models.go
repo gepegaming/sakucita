@@ -147,6 +147,7 @@ func (ns NullLedgerSourceType) Value() (driver.Value, error) {
 type TransactionStatus string
 
 const (
+	TransactionStatusINITIAL  TransactionStatus = "INITIAL"
 	TransactionStatusPENDING  TransactionStatus = "PENDING"
 	TransactionStatusPAID     TransactionStatus = "PAID"
 	TransactionStatusFAILED   TransactionStatus = "FAILED"
@@ -268,15 +269,15 @@ type DonationMessage struct {
 }
 
 type PaymentChannel struct {
-	ID                    int32
-	Code                  string
-	Name                  string
-	GatewayFeeFixed       int64
-	GatewayFeePercentage  int64
-	PlatformFeeFixed      int64
-	PlatformFeePercentage int64
-	IsActive              bool
-	CreatedAt             pgtype.Timestamptz
+	ID                       int32
+	Code                     string
+	Name                     string
+	GatewayFeeFixed          int64
+	GatewayFeePercentageBps  int32
+	PlatformFeeFixed         int64
+	PlatformFeePercentageBps int32
+	IsActive                 bool
+	CreatedAt                pgtype.Timestamptz
 }
 
 type Role struct {
@@ -297,29 +298,29 @@ type Session struct {
 }
 
 type Transaction struct {
-	ID                    uuid.UUID
-	DonationMessageID     uuid.UUID
-	PaymentChannelID      int32
-	PayerUserID           pgtype.UUID
-	PayeeUserID           uuid.UUID
-	Amount                int64
-	GatewayFeeFixed       int64
-	GatewayFeePercentage  int64
-	GatewayFeeAmount      int64
-	PlatformFeeFixed      int64
-	PlatformFeePercentage int64
-	PlatformFeeAmount     int64
-	FeeFixed              int64
-	FeePercentage         int64
-	FeeAmount             int64
-	NetAmount             int64
-	Currency              string
-	Status                TransactionStatus
-	ExternalReference     pgtype.Text
-	Meta                  []byte
-	CreatedAt             pgtype.Timestamptz
-	PaidAt                pgtype.Timestamptz
-	SettledAt             pgtype.Timestamptz
+	ID                       uuid.UUID
+	DonationMessageID        uuid.UUID
+	PaymentChannelID         int32
+	PayerUserID              pgtype.UUID
+	PayeeUserID              uuid.UUID
+	GrossPaidAmount          int64
+	GatewayFeeFixed          int64
+	GatewayFeePercentageBps  int32
+	GatewayFeeAmount         int64
+	PlatformFeeFixed         int64
+	PlatformFeePercentageBps int32
+	PlatformFeeAmount        int64
+	FeeFixed                 int64
+	FeePercentageBps         int32
+	FeeAmount                int64
+	NetAmount                int64
+	Currency                 string
+	Status                   TransactionStatus
+	ExternalReference        pgtype.Text
+	Meta                     []byte
+	CreatedAt                pgtype.Timestamptz
+	PaidAt                   pgtype.Timestamptz
+	SettledAt                pgtype.Timestamptz
 }
 
 type User struct {
@@ -338,11 +339,11 @@ type User struct {
 }
 
 type UserFeeOverride struct {
-	ID                    uuid.UUID
-	UserID                uuid.UUID
-	PaymentChannelID      int32
-	PlatformFeeFixed      int64
-	PlatformFeePercentage int64
+	ID                       uuid.UUID
+	UserID                   uuid.UUID
+	PaymentChannelID         int32
+	PlatformFeeFixed         int64
+	PlatformFeePercentageBps int32
 }
 
 type UserRole struct {

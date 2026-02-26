@@ -12,7 +12,7 @@ import (
 )
 
 const getAllUserFeeOverridesByUserID = `-- name: GetAllUserFeeOverridesByUserID :many
-SELECT id, user_id, payment_channel_id, platform_fee_fixed, platform_fee_percentage FROM user_fee_overrides 
+SELECT id, user_id, payment_channel_id, platform_fee_fixed, platform_fee_percentage_bps FROM user_fee_overrides 
 WHERE user_id = $1
 `
 
@@ -30,7 +30,7 @@ func (q *Queries) GetAllUserFeeOverridesByUserID(ctx context.Context, userID uui
 			&i.UserID,
 			&i.PaymentChannelID,
 			&i.PlatformFeeFixed,
-			&i.PlatformFeePercentage,
+			&i.PlatformFeePercentageBps,
 		); err != nil {
 			return nil, err
 		}
@@ -49,11 +49,11 @@ SELECT
     COALESCE(ufo.platform_fee_fixed, pc.platform_fee_fixed) 
         AS platform_fee_fixed,
 
-    COALESCE(ufo.platform_fee_percentage, pc.platform_fee_percentage) 
-        AS platform_fee_percentage,
+    COALESCE(ufo.platform_fee_percentage_bps, pc.platform_fee_percentage_bps) 
+        AS platform_fee_percentage_bps,
 
     pc.gateway_fee_fixed,
-    pc.gateway_fee_percentage
+    pc.gateway_fee_percentage_bps
 
 FROM payment_channels pc
 LEFT JOIN user_fee_overrides ufo
@@ -70,11 +70,11 @@ type GetUserFeeParams struct {
 }
 
 type GetUserFeeRow struct {
-	PaymentChannelID      int32
-	PlatformFeeFixed      int64
-	PlatformFeePercentage int64
-	GatewayFeeFixed       int64
-	GatewayFeePercentage  int64
+	PaymentChannelID         int32
+	PlatformFeeFixed         int64
+	PlatformFeePercentageBps int32
+	GatewayFeeFixed          int64
+	GatewayFeePercentageBps  int32
 }
 
 func (q *Queries) GetUserFee(ctx context.Context, arg GetUserFeeParams) (GetUserFeeRow, error) {
@@ -83,9 +83,9 @@ func (q *Queries) GetUserFee(ctx context.Context, arg GetUserFeeParams) (GetUser
 	err := row.Scan(
 		&i.PaymentChannelID,
 		&i.PlatformFeeFixed,
-		&i.PlatformFeePercentage,
+		&i.PlatformFeePercentageBps,
 		&i.GatewayFeeFixed,
-		&i.GatewayFeePercentage,
+		&i.GatewayFeePercentageBps,
 	)
 	return i, err
 }

@@ -25,6 +25,5 @@ type CreateDonationResult struct {
 	TransactionID string `json:"transaction_id"`
 	Amount        int64  `json:"amount"`
 	Currency      string `json:"currency"`
-	Status        string `json:"status"`
 	QrString      string `json:"qr_string"`
 }

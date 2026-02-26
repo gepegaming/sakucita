@@ -12,9 +12,9 @@ INSERT INTO payment_channels (
   code,
   name,
   gateway_fee_fixed,
-  gateway_fee_percentage,
+  gateway_fee_percentage_bps,
   platform_fee_fixed,
-  platform_fee_percentage
+  platform_fee_percentage_bps
 ) VALUES (
   $1, $2, $3, $4, $5, $6
 ) RETURNING *;

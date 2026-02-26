@@ -14,21 +14,21 @@ INSERT INTO payment_channels (
   code,
   name,
   gateway_fee_fixed,
-  gateway_fee_percentage,
+  gateway_fee_percentage_bps,
   platform_fee_fixed,
-  platform_fee_percentage
+  platform_fee_percentage_bps
 ) VALUES (
   $1, $2, $3, $4, $5, $6
-) RETURNING id, code, name, gateway_fee_fixed, gateway_fee_percentage, platform_fee_fixed, platform_fee_percentage, is_active, created_at
+) RETURNING id, code, name, gateway_fee_fixed, gateway_fee_percentage_bps, platform_fee_fixed, platform_fee_percentage_bps, is_active, created_at
 `
 
 type CreatePaymentChannelParams struct {
-	Code                  string
-	Name                  string
-	GatewayFeeFixed       int64
-	GatewayFeePercentage  int64
-	PlatformFeeFixed      int64
-	PlatformFeePercentage int64
+	Code                     string
+	Name                     string
+	GatewayFeeFixed          int64
+	GatewayFeePercentageBps  int32
+	PlatformFeeFixed         int64
+	PlatformFeePercentageBps int32
 }
 
 func (q *Queries) CreatePaymentChannel(ctx context.Context, arg CreatePaymentChannelParams) (PaymentChannel, error) {
@@ -36,9 +36,9 @@ func (q *Queries) CreatePaymentChannel(ctx context.Context, arg CreatePaymentCha
 		arg.Code,
 		arg.Name,
 		arg.GatewayFeeFixed,
-		arg.GatewayFeePercentage,
+		arg.GatewayFeePercentageBps,
 		arg.PlatformFeeFixed,
-		arg.PlatformFeePercentage,
+		arg.PlatformFeePercentageBps,
 	)
 	var i PaymentChannel
 	err := row.Scan(
@@ -46,9 +46,9 @@ func (q *Queries) CreatePaymentChannel(ctx context.Context, arg CreatePaymentCha
 		&i.Code,
 		&i.Name,
 		&i.GatewayFeeFixed,
-		&i.GatewayFeePercentage,
+		&i.GatewayFeePercentageBps,
 		&i.PlatformFeeFixed,
-		&i.PlatformFeePercentage,
+		&i.PlatformFeePercentageBps,
 		&i.IsActive,
 		&i.CreatedAt,
 	)
@@ -56,7 +56,7 @@ func (q *Queries) CreatePaymentChannel(ctx context.Context, arg CreatePaymentCha
 }
 
 const getPaymentChannelByCode = `-- name: GetPaymentChannelByCode :one
-SELECT id, code, name, gateway_fee_fixed, gateway_fee_percentage, platform_fee_fixed, platform_fee_percentage, is_active, created_at FROM payment_channels WHERE code = $1
+SELECT id, code, name, gateway_fee_fixed, gateway_fee_percentage_bps, platform_fee_fixed, platform_fee_percentage_bps, is_active, created_at FROM payment_channels WHERE code = $1
 `
 
 func (q *Queries) GetPaymentChannelByCode(ctx context.Context, code string) (PaymentChannel, error) {
@@ -67,9 +67,9 @@ func (q *Queries) GetPaymentChannelByCode(ctx context.Context, code string) (Pay
 		&i.Code,
 		&i.Name,
 		&i.GatewayFeeFixed,
-		&i.GatewayFeePercentage,
+		&i.GatewayFeePercentageBps,
 		&i.PlatformFeeFixed,
-		&i.PlatformFeePercentage,
+		&i.PlatformFeePercentageBps,
 		&i.IsActive,
 		&i.CreatedAt,
 	)
@@ -77,7 +77,7 @@ func (q *Queries) GetPaymentChannelByCode(ctx context.Context, code string) (Pay
 }
 
 const getPaymentChannelByID = `-- name: GetPaymentChannelByID :one
-SELECT id, code, name, gateway_fee_fixed, gateway_fee_percentage, platform_fee_fixed, platform_fee_percentage, is_active, created_at FROM payment_channels WHERE id = $1
+SELECT id, code, name, gateway_fee_fixed, gateway_fee_percentage_bps, platform_fee_fixed, platform_fee_percentage_bps, is_active, created_at FROM payment_channels WHERE id = $1
 `
 
 func (q *Queries) GetPaymentChannelByID(ctx context.Context, id int32) (PaymentChannel, error) {
@@ -88,9 +88,9 @@ func (q *Queries) GetPaymentChannelByID(ctx context.Context, id int32) (PaymentC
 		&i.Code,
 		&i.Name,
 		&i.GatewayFeeFixed,
-		&i.GatewayFeePercentage,
+		&i.GatewayFeePercentageBps,
 		&i.PlatformFeeFixed,
-		&i.PlatformFeePercentage,
+		&i.PlatformFeePercentageBps,
 		&i.IsActive,
 		&i.CreatedAt,
 	)
@@ -98,7 +98,7 @@ func (q *Queries) GetPaymentChannelByID(ctx context.Context, id int32) (PaymentC
 }
 
 const getPaymentChannels = `-- name: GetPaymentChannels :many
-SELECT id, code, name, gateway_fee_fixed, gateway_fee_percentage, platform_fee_fixed, platform_fee_percentage, is_active, created_at FROM payment_channels
+SELECT id, code, name, gateway_fee_fixed, gateway_fee_percentage_bps, platform_fee_fixed, platform_fee_percentage_bps, is_active, created_at FROM payment_channels
 `
 
 func (q *Queries) GetPaymentChannels(ctx context.Context) ([]PaymentChannel, error) {
@@ -115,9 +115,9 @@ func (q *Queries) GetPaymentChannels(ctx context.Context) ([]PaymentChannel, err
 			&i.Code,
 			&i.Name,
 			&i.GatewayFeeFixed,
-			&i.GatewayFeePercentage,
+			&i.GatewayFeePercentageBps,
 			&i.PlatformFeeFixed,
-			&i.PlatformFeePercentage,
+			&i.PlatformFeePercentageBps,
 			&i.IsActive,
 			&i.CreatedAt,
 		); err != nil {

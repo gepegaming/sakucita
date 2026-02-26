@@ -19,15 +19,15 @@ INSERT INTO transactions (
   payment_channel_id,
   payer_user_id,
   payee_user_id,
-  amount,
+  gross_paid_amount,
   gateway_fee_fixed,
-  gateway_fee_percentage,
+  gateway_fee_percentage_bps,
   gateway_fee_amount,
   platform_fee_fixed,
-  platform_fee_percentage,
+  platform_fee_percentage_bps,
   platform_fee_amount,
   fee_fixed,
-  fee_percentage,
+  fee_percentage_bps,
   fee_amount,
   net_amount,
   currency,
@@ -35,29 +35,29 @@ INSERT INTO transactions (
   external_reference
 ) VALUES (
   $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19
-) RETURNING id, donation_message_id, payment_channel_id, payer_user_id, payee_user_id, amount, gateway_fee_fixed, gateway_fee_percentage, gateway_fee_amount, platform_fee_fixed, platform_fee_percentage, platform_fee_amount, fee_fixed, fee_percentage, fee_amount, net_amount, currency, status, external_reference, meta, created_at, paid_at, settled_at
+) RETURNING id, donation_message_id, payment_channel_id, payer_user_id, payee_user_id, gross_paid_amount, gateway_fee_fixed, gateway_fee_percentage_bps, gateway_fee_amount, platform_fee_fixed, platform_fee_percentage_bps, platform_fee_amount, fee_fixed, fee_percentage_bps, fee_amount, net_amount, currency, status, external_reference, meta, created_at, paid_at, settled_at
 `
 
 type CreateTransactionParams struct {
-	ID                    uuid.UUID
-	DonationMessageID     uuid.UUID
-	PaymentChannelID      int32
-	PayerUserID           pgtype.UUID
-	PayeeUserID           uuid.UUID
-	Amount                int64
-	GatewayFeeFixed       int64
-	GatewayFeePercentage  int64
-	GatewayFeeAmount      int64
-	PlatformFeeFixed      int64
-	PlatformFeePercentage int64
-	PlatformFeeAmount     int64
-	FeeFixed              int64
-	FeePercentage         int64
-	FeeAmount             int64
-	NetAmount             int64
-	Currency              string
-	Status                TransactionStatus
-	ExternalReference     pgtype.Text
+	ID                       uuid.UUID
+	DonationMessageID        uuid.UUID
+	PaymentChannelID         int32
+	PayerUserID              pgtype.UUID
+	PayeeUserID              uuid.UUID
+	GrossPaidAmount          int64
+	GatewayFeeFixed          int64
+	GatewayFeePercentageBps  int32
+	GatewayFeeAmount         int64
+	PlatformFeeFixed         int64
+	PlatformFeePercentageBps int32
+	PlatformFeeAmount        int64
+	FeeFixed                 int64
+	FeePercentageBps         int32
+	FeeAmount                int64
+	NetAmount                int64
+	Currency                 string
+	Status                   TransactionStatus
+	ExternalReference        pgtype.Text
 }
 
 func (q *Queries) CreateTransaction(ctx context.Context, arg CreateTransactionParams) (Transaction, error) {
@@ -67,15 +67,15 @@ func (q *Queries) CreateTransaction(ctx context.Context, arg CreateTransactionPa
 		arg.PaymentChannelID,
 		arg.PayerUserID,
 		arg.PayeeUserID,
-		arg.Amount,
+		arg.GrossPaidAmount,
 		arg.GatewayFeeFixed,
-		arg.GatewayFeePercentage,
+		arg.GatewayFeePercentageBps,
 		arg.GatewayFeeAmount,
 		arg.PlatformFeeFixed,
-		arg.PlatformFeePercentage,
+		arg.PlatformFeePercentageBps,
 		arg.PlatformFeeAmount,
 		arg.FeeFixed,
-		arg.FeePercentage,
+		arg.FeePercentageBps,
 		arg.FeeAmount,
 		arg.NetAmount,
 		arg.Currency,
@@ -89,15 +89,15 @@ func (q *Queries) CreateTransaction(ctx context.Context, arg CreateTransactionPa
 		&i.PaymentChannelID,
 		&i.PayerUserID,
 		&i.PayeeUserID,
-		&i.Amount,
+		&i.GrossPaidAmount,
 		&i.GatewayFeeFixed,
-		&i.GatewayFeePercentage,
+		&i.GatewayFeePercentageBps,
 		&i.GatewayFeeAmount,
 		&i.PlatformFeeFixed,
-		&i.PlatformFeePercentage,
+		&i.PlatformFeePercentageBps,
 		&i.PlatformFeeAmount,
 		&i.FeeFixed,
-		&i.FeePercentage,
+		&i.FeePercentageBps,
 		&i.FeeAmount,
 		&i.NetAmount,
 		&i.Currency,
@@ -112,7 +112,7 @@ func (q *Queries) CreateTransaction(ctx context.Context, arg CreateTransactionPa
 }
 
 const getTransactionByDonationMessageID = `-- name: GetTransactionByDonationMessageID :one
-SELECT id, donation_message_id, payment_channel_id, payer_user_id, payee_user_id, amount, gateway_fee_fixed, gateway_fee_percentage, gateway_fee_amount, platform_fee_fixed, platform_fee_percentage, platform_fee_amount, fee_fixed, fee_percentage, fee_amount, net_amount, currency, status, external_reference, meta, created_at, paid_at, settled_at FROM transactions WHERE donation_message_id = $1 LIMIT 1
+SELECT id, donation_message_id, payment_channel_id, payer_user_id, payee_user_id, gross_paid_amount, gateway_fee_fixed, gateway_fee_percentage_bps, gateway_fee_amount, platform_fee_fixed, platform_fee_percentage_bps, platform_fee_amount, fee_fixed, fee_percentage_bps, fee_amount, net_amount, currency, status, external_reference, meta, created_at, paid_at, settled_at FROM transactions WHERE donation_message_id = $1 LIMIT 1
 `
 
 func (q *Queries) GetTransactionByDonationMessageID(ctx context.Context, donationMessageID uuid.UUID) (Transaction, error) {
@@ -124,15 +124,15 @@ func (q *Queries) GetTransactionByDonationMessageID(ctx context.Context, donatio
 		&i.PaymentChannelID,
 		&i.PayerUserID,
 		&i.PayeeUserID,
-		&i.Amount,
+		&i.GrossPaidAmount,
 		&i.GatewayFeeFixed,
-		&i.GatewayFeePercentage,
+		&i.GatewayFeePercentageBps,
 		&i.GatewayFeeAmount,
 		&i.PlatformFeeFixed,
-		&i.PlatformFeePercentage,
+		&i.PlatformFeePercentageBps,
 		&i.PlatformFeeAmount,
 		&i.FeeFixed,
-		&i.FeePercentage,
+		&i.FeePercentageBps,
 		&i.FeeAmount,
 		&i.NetAmount,
 		&i.Currency,
@@ -147,7 +147,7 @@ func (q *Queries) GetTransactionByDonationMessageID(ctx context.Context, donatio
 }
 
 const getTransactionByExternalReference = `-- name: GetTransactionByExternalReference :one
-SELECT id, donation_message_id, payment_channel_id, payer_user_id, payee_user_id, amount, gateway_fee_fixed, gateway_fee_percentage, gateway_fee_amount, platform_fee_fixed, platform_fee_percentage, platform_fee_amount, fee_fixed, fee_percentage, fee_amount, net_amount, currency, status, external_reference, meta, created_at, paid_at, settled_at FROM transactions WHERE external_reference = $1 LIMIT 1
+SELECT id, donation_message_id, payment_channel_id, payer_user_id, payee_user_id, gross_paid_amount, gateway_fee_fixed, gateway_fee_percentage_bps, gateway_fee_amount, platform_fee_fixed, platform_fee_percentage_bps, platform_fee_amount, fee_fixed, fee_percentage_bps, fee_amount, net_amount, currency, status, external_reference, meta, created_at, paid_at, settled_at FROM transactions WHERE external_reference = $1 LIMIT 1
 `
 
 func (q *Queries) GetTransactionByExternalReference(ctx context.Context, externalReference pgtype.Text) (Transaction, error) {
@@ -159,15 +159,15 @@ func (q *Queries) GetTransactionByExternalReference(ctx context.Context, externa
 		&i.PaymentChannelID,
 		&i.PayerUserID,
 		&i.PayeeUserID,
-		&i.Amount,
+		&i.GrossPaidAmount,
 		&i.GatewayFeeFixed,
-		&i.GatewayFeePercentage,
+		&i.GatewayFeePercentageBps,
 		&i.GatewayFeeAmount,
 		&i.PlatformFeeFixed,
-		&i.PlatformFeePercentage,
+		&i.PlatformFeePercentageBps,
 		&i.PlatformFeeAmount,
 		&i.FeeFixed,
-		&i.FeePercentage,
+		&i.FeePercentageBps,
 		&i.FeeAmount,
 		&i.NetAmount,
 		&i.Currency,
@@ -182,7 +182,7 @@ func (q *Queries) GetTransactionByExternalReference(ctx context.Context, externa
 }
 
 const getTransactionByID = `-- name: GetTransactionByID :one
-SELECT id, donation_message_id, payment_channel_id, payer_user_id, payee_user_id, amount, gateway_fee_fixed, gateway_fee_percentage, gateway_fee_amount, platform_fee_fixed, platform_fee_percentage, platform_fee_amount, fee_fixed, fee_percentage, fee_amount, net_amount, currency, status, external_reference, meta, created_at, paid_at, settled_at FROM transactions WHERE id = $1 LIMIT 1
+SELECT id, donation_message_id, payment_channel_id, payer_user_id, payee_user_id, gross_paid_amount, gateway_fee_fixed, gateway_fee_percentage_bps, gateway_fee_amount, platform_fee_fixed, platform_fee_percentage_bps, platform_fee_amount, fee_fixed, fee_percentage_bps, fee_amount, net_amount, currency, status, external_reference, meta, created_at, paid_at, settled_at FROM transactions WHERE id = $1 LIMIT 1
 `
 
 func (q *Queries) GetTransactionByID(ctx context.Context, id uuid.UUID) (Transaction, error) {
@@ -194,15 +194,15 @@ func (q *Queries) GetTransactionByID(ctx context.Context, id uuid.UUID) (Transac
 		&i.PaymentChannelID,
 		&i.PayerUserID,
 		&i.PayeeUserID,
-		&i.Amount,
+		&i.GrossPaidAmount,
 		&i.GatewayFeeFixed,
-		&i.GatewayFeePercentage,
+		&i.GatewayFeePercentageBps,
 		&i.GatewayFeeAmount,
 		&i.PlatformFeeFixed,
-		&i.PlatformFeePercentage,
+		&i.PlatformFeePercentageBps,
 		&i.PlatformFeeAmount,
 		&i.FeeFixed,
-		&i.FeePercentage,
+		&i.FeePercentageBps,
 		&i.FeeAmount,
 		&i.NetAmount,
 		&i.Currency,
@@ -214,4 +214,36 @@ func (q *Queries) GetTransactionByID(ctx context.Context, id uuid.UUID) (Transac
 		&i.SettledAt,
 	)
 	return i, err
+}
+
+const updateTransactionExternalReference = `-- name: UpdateTransactionExternalReference :exec
+UPDATE transactions
+SET external_reference = $2
+WHERE id = $1
+`
+
+type UpdateTransactionExternalReferenceParams struct {
+	ID                uuid.UUID
+	ExternalReference pgtype.Text
+}
+
+func (q *Queries) UpdateTransactionExternalReference(ctx context.Context, arg UpdateTransactionExternalReferenceParams) error {
+	_, err := q.db.Exec(ctx, updateTransactionExternalReference, arg.ID, arg.ExternalReference)
+	return err
+}
+
+const updateTransactionStatus = `-- name: UpdateTransactionStatus :exec
+UPDATE transactions
+SET status = $2
+WHERE id = $1
+`
+
+type UpdateTransactionStatusParams struct {
+	ID     uuid.UUID
+	Status TransactionStatus
+}
+
+func (q *Queries) UpdateTransactionStatus(ctx context.Context, arg UpdateTransactionStatusParams) error {
+	_, err := q.db.Exec(ctx, updateTransactionStatus, arg.ID, arg.Status)
+	return err
 }

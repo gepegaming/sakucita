@@ -5,11 +5,11 @@ SELECT
     COALESCE(ufo.platform_fee_fixed, pc.platform_fee_fixed) 
         AS platform_fee_fixed,
 
-    COALESCE(ufo.platform_fee_percentage, pc.platform_fee_percentage) 
-        AS platform_fee_percentage,
+    COALESCE(ufo.platform_fee_percentage_bps, pc.platform_fee_percentage_bps) 
+        AS platform_fee_percentage_bps,
 
     pc.gateway_fee_fixed,
-    pc.gateway_fee_percentage
+    pc.gateway_fee_percentage_bps
 
 FROM payment_channels pc
 LEFT JOIN user_fee_overrides ufo
