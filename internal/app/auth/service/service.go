@@ -2,15 +2,14 @@ package service
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"time"
-
+	userService "sakucita/internal/app/user/service"
 	"sakucita/internal/domain"
 	"sakucita/internal/infra/postgres/repository"
 	"sakucita/internal/server/security"
 	"sakucita/internal/shared/utils"
 	"sakucita/pkg/config"
+	"time"
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
@@ -22,19 +21,20 @@ import (
 )
 
 type service struct {
-	db       *pgxpool.Pool
-	rdb      *redis.Client
-	q        *repository.Queries
-	config   config.App
-	security *security.Security
-	log      zerolog.Logger
+	userService userService.UserService
+	db          *pgxpool.Pool
+	rdb         *redis.Client
+	q           *repository.Queries
+	config      config.App
+	security    *security.Security
+	log         zerolog.Logger
 }
 
 type AuthService interface {
 	RegisterLocal(ctx context.Context, req RegisterCommand) error
-	LoginLocal(ctx context.Context, req LoginLocalCommand) (*LoginResult, error)
-	Me(ctx context.Context, userID uuid.UUID) (*domain.UserWithRoles, error)
-	RefreshToken(ctx context.Context, req RefreshCommand) (*RefreshResult, error)
+	LoginLocal(ctx context.Context, req LoginLocalCommand) (LoginResponse, error)
+	Me(ctx context.Context, userID uuid.UUID) (domain.UserWithRoles, error)
+	RefreshToken(ctx context.Context, req RefreshCommand) (RefreshResponse, error)
 
 	// auth policy
 	CheckLoginBan(ctx context.Context, id string) (time.Duration, error)
@@ -43,6 +43,7 @@ type AuthService interface {
 }
 
 func NewService(
+	userService userService.UserService,
 	db *pgxpool.Pool,
 	rdb *redis.Client,
 	q *repository.Queries,
@@ -50,18 +51,18 @@ func NewService(
 	security *security.Security,
 	log zerolog.Logger,
 ) AuthService {
-	return &service{db, rdb, q, config, security, log}
+	return &service{userService, db, rdb, q, config, security, log}
 }
 
-func (s *service) RefreshToken(ctx context.Context, req RefreshCommand) (*RefreshResult, error) {
+func (s *service) RefreshToken(ctx context.Context, req RefreshCommand) (RefreshResponse, error) {
 	// get session
 	session, err := s.q.GetActiveSessionByTokenID(ctx, utils.StringToPgTypeUUID(req.Claims.RegisteredClaims.ID))
 	if err != nil {
 		if utils.IsNotFoundError(err) {
-			return nil, domain.NewAppError(fiber.StatusUnauthorized, domain.ErrMsgSessionNotFound, domain.ErrUnauthorized)
+			return RefreshResponse{}, domain.NewAppError(fiber.StatusUnauthorized, domain.ErrMsgSessionNotFound, domain.ErrUnauthorized)
 		}
 		s.log.Err(err).Msg("failed to get session for refresh token")
-		return nil, domain.NewAppError(fiber.StatusInternalServerError, domain.ErrMsgInternalServerError, domain.ErrInternalServerError)
+		return RefreshResponse{}, domain.NewAppError(fiber.StatusInternalServerError, domain.ErrMsgInternalServerError, domain.ErrInternalServerError)
 	}
 
 	// cek kalo device nya beda dari hash device_id maka error
@@ -71,7 +72,7 @@ func (s *service) RefreshToken(ctx context.Context, req RefreshCommand) (*Refres
 			Str("device_id", deviceID).
 			Str("session_device_id", session.DeviceID).
 			Msg("device id mismatch")
-		return nil, domain.NewAppError(fiber.StatusUnauthorized, domain.ErrMsgDeviceIdMissmatch, domain.ErrUnauthorized)
+		return RefreshResponse{}, domain.NewAppError(fiber.StatusUnauthorized, domain.ErrMsgDeviceIdMissmatch, domain.ErrUnauthorized)
 	}
 
 	// generate token
@@ -79,14 +80,14 @@ func (s *service) RefreshToken(ctx context.Context, req RefreshCommand) (*Refres
 	accessToken, _, err := s.security.GenerateToken(req.Claims.UserID, accessTokenID, req.Claims.Role, s.config.JWT.AccessTokenExpiresIn)
 	if err != nil {
 		s.log.Error().Err(err).Msg("failed to generate access token")
-		return nil, domain.NewAppError(fiber.StatusInternalServerError, domain.ErrMsgInternalServerError, domain.ErrInternalServerError)
+		return RefreshResponse{}, domain.NewAppError(fiber.StatusInternalServerError, domain.ErrMsgInternalServerError, domain.ErrInternalServerError)
 	}
 	// generate refresh token
 	refreshTokenID := uuid.New()
 	refreshToken, rtClaims, err := s.security.GenerateToken(req.Claims.UserID, refreshTokenID, req.Claims.Role, s.config.JWT.RefreshTokenExpiresIn)
 	if err != nil {
 		s.log.Error().Err(err).Msg("failed to generate refresh token")
-		return nil, domain.NewAppError(fiber.StatusInternalServerError, domain.ErrMsgInternalServerError, domain.ErrInternalServerError)
+		return RefreshResponse{}, domain.NewAppError(fiber.StatusInternalServerError, domain.ErrMsgInternalServerError, domain.ErrInternalServerError)
 	}
 
 	// create session
@@ -109,56 +110,48 @@ func (s *service) RefreshToken(ctx context.Context, req RefreshCommand) (*Refres
 	})
 	if err != nil {
 		s.log.Error().Err(err).Msg("failed to create session")
-		return nil, domain.NewAppError(fiber.StatusInternalServerError, domain.ErrMsgInternalServerError, domain.ErrInternalServerError)
+		return RefreshResponse{}, domain.NewAppError(fiber.StatusInternalServerError, domain.ErrMsgInternalServerError, domain.ErrInternalServerError)
 	}
 
-	return &RefreshResult{
+	return RefreshResponse{
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 	}, nil
 }
 
-func (s *service) Me(ctx context.Context, userID uuid.UUID) (*domain.UserWithRoles, error) {
-	userWithRolesRow, err := s.q.GetUserByIDWithRoles(ctx, userID)
+func (s *service) Me(ctx context.Context, userID uuid.UUID) (domain.UserWithRoles, error) {
+	userWithRolesRow, err := s.userService.GetByIDWithRoles(ctx, userID)
 	if err != nil {
 		s.log.Error().Err(err).Msg("failed to get user with roles")
-		return nil, domain.NewAppError(fiber.StatusNotFound, "user not found", domain.ErrNotfound)
-	}
-	// unmarshar role
-	var roles []domain.Role
-	if len(userWithRolesRow.Roles) > 0 {
-		if err := json.Unmarshal(userWithRolesRow.Roles, &roles); err != nil {
-			s.log.Error().Err(err).Msg("failed to unmarshal roles array")
-			return nil, domain.NewAppError(fiber.StatusInternalServerError, domain.ErrMsgInternalServerError, domain.ErrInternalServerError)
-		}
+		return domain.UserWithRoles{}, domain.NewAppError(fiber.StatusNotFound, "user not found", domain.ErrNotfound)
 	}
 
-	userResponse := &domain.UserWithRoles{
-		User: domain.User{
-			ID:            userWithRolesRow.ID,
-			Email:         userWithRolesRow.Email,
-			EmailVerified: userWithRolesRow.EmailVerified,
-			Phone:         userWithRolesRow.Phone,
-			Name:          userWithRolesRow.Name,
-			Nickname:      userWithRolesRow.Nickname,
-			ImageUrl:      userWithRolesRow.ImageUrl,
-			SingleSession: userWithRolesRow.SingleSession,
-			Meta:          userWithRolesRow.Meta,
-			CreatedAt:     userWithRolesRow.CreatedAt,
-			UpdatedAt:     userWithRolesRow.UpdatedAt,
-			DeletedAt:     userWithRolesRow.DeletedAt,
-		},
-		Roles: roles,
-	}
+	// userResponse := &domain.UserWithRoles{
+	// 	User: domain.User{
+	// 		ID:            userWithRolesRow.ID,
+	// 		Email:         userWithRolesRow.Email,
+	// 		EmailVerified: userWithRolesRow.EmailVerified,
+	// 		Phone:         userWithRolesRow.Phone,
+	// 		Name:          userWithRolesRow.Name,
+	// 		Nickname:      userWithRolesRow.Nickname,
+	// 		ImageUrl:      userWithRolesRow.ImageUrl,
+	// 		SingleSession: userWithRolesRow.SingleSession,
+	// 		Meta:          userWithRolesRow.Meta,
+	// 		CreatedAt:     userWithRolesRow.CreatedAt,
+	// 		UpdatedAt:     userWithRolesRow.UpdatedAt,
+	// 		DeletedAt:     userWithRolesRow.DeletedAt,
+	// 	},
+	// 	Roles: userWithRolesRow.Roles,
+	// }
 
-	return userResponse, nil
+	return userWithRolesRow, nil
 }
 
-func (s *service) LoginLocal(ctx context.Context, req LoginLocalCommand) (*LoginResult, error) {
+func (s *service) LoginLocal(ctx context.Context, req LoginLocalCommand) (LoginResponse, error) {
 	// check ban user attemp, walau udah pake middleware tp best practice nya gini, karna kedepanya mungkin pake grpc
 	ttl, err := s.CheckLoginBan(ctx, req.Email)
 	if err != nil {
-		return nil, domain.NewAppError(
+		return LoginResponse{}, domain.NewAppError(
 			fiber.StatusInternalServerError,
 			domain.ErrMsgInternalServerError,
 			domain.ErrInternalServerError,
@@ -166,7 +159,7 @@ func (s *service) LoginLocal(ctx context.Context, req LoginLocalCommand) (*Login
 	}
 
 	if ttl > 0 {
-		return nil, domain.NewAppError(
+		return LoginResponse{}, domain.NewAppError(
 			fiber.StatusTooManyRequests,
 			fmt.Sprintf("too many attempts. please wait after %s", ttl),
 			domain.ErrTooManyRequests,
@@ -177,28 +170,19 @@ func (s *service) LoginLocal(ctx context.Context, req LoginLocalCommand) (*Login
 	authIdentity, err := s.q.GetAuthIdentityByEmail(ctx, req.Email)
 	if err != nil {
 		s.log.Error().Err(err).Msg("user not found ges")
-		return nil, domain.NewAppError(fiber.StatusNotFound, domain.ErrMsgUserNotFound, domain.ErrNotfound)
+		return LoginResponse{}, domain.NewAppError(fiber.StatusNotFound, domain.ErrMsgUserNotFound, domain.ErrNotfound)
 	}
 	// compare password
 	if !utils.CheckPassword(req.Password, authIdentity.PasswordHash.String) {
 		// kalo gagal login, tambahin counter attempt
 		_, _ = s.OnLoginFail(ctx, req.Email)
-		return nil, domain.NewAppError(fiber.StatusUnauthorized, domain.ErrMsgInvalidCredentials, domain.ErrUnauthorized)
+		return LoginResponse{}, domain.NewAppError(fiber.StatusUnauthorized, domain.ErrMsgInvalidCredentials, domain.ErrUnauthorized)
 	}
 	// get user
-	userWithRolesRow, err := s.q.GetUserByIDWithRoles(ctx, authIdentity.UserID)
+	userWithRolesRow, err := s.userService.GetByIDWithRoles(ctx, authIdentity.UserID)
 	if err != nil {
 		s.log.Warn().Err(err).Msg("failed to get user but auth identity found")
-		return nil, domain.NewAppError(fiber.StatusNotFound, domain.ErrMsgUserNotFound, domain.ErrNotfound)
-	}
-
-	// unmarshar role
-	var roles []domain.Role
-	if len(userWithRolesRow.Roles) > 0 {
-		if err := json.Unmarshal(userWithRolesRow.Roles, &roles); err != nil {
-			s.log.Error().Err(err).Msg("failed to unmarshal roles array")
-			return nil, domain.NewAppError(fiber.StatusInternalServerError, domain.ErrMsgInternalServerError, domain.ErrInternalServerError)
-		}
+		return LoginResponse{}, domain.NewAppError(fiber.StatusNotFound, domain.ErrMsgUserNotFound, domain.ErrNotfound)
 	}
 
 	userResponse := domain.UserWithRoles{
@@ -216,23 +200,23 @@ func (s *service) LoginLocal(ctx context.Context, req LoginLocalCommand) (*Login
 			UpdatedAt:     userWithRolesRow.UpdatedAt,
 			DeletedAt:     userWithRolesRow.DeletedAt,
 		},
-		Roles: roles,
+		Roles: userWithRolesRow.Roles,
 	}
 
 	// generate token
 	accessTokenID := uuid.New()
-	accessToken, _, err := s.security.GenerateToken(userResponse.ID, accessTokenID, roles, s.config.JWT.AccessTokenExpiresIn)
+	accessToken, _, err := s.security.GenerateToken(userResponse.ID, accessTokenID, userResponse.Roles, s.config.JWT.AccessTokenExpiresIn)
 	if err != nil {
 		s.log.Error().Err(err).Msg("failed to generate access token")
-		return nil, domain.NewAppError(fiber.StatusInternalServerError, domain.ErrMsgInternalServerError, domain.ErrInternalServerError)
+		return LoginResponse{}, domain.NewAppError(fiber.StatusInternalServerError, domain.ErrMsgInternalServerError, domain.ErrInternalServerError)
 	}
 
 	// generate refresh token
 	refreshTokenID := uuid.New()
-	refreshToken, rtClaims, err := s.security.GenerateToken(userResponse.ID, refreshTokenID, roles, s.config.JWT.RefreshTokenExpiresIn)
+	refreshToken, rtClaims, err := s.security.GenerateToken(userResponse.ID, refreshTokenID, userResponse.Roles, s.config.JWT.RefreshTokenExpiresIn)
 	if err != nil {
 		s.log.Error().Err(err).Msg("failed to generate refresh token")
-		return nil, domain.NewAppError(fiber.StatusInternalServerError, domain.ErrMsgInternalServerError, domain.ErrInternalServerError)
+		return LoginResponse{}, domain.NewAppError(fiber.StatusInternalServerError, domain.ErrMsgInternalServerError, domain.ErrInternalServerError)
 	}
 
 	// delete all session if user activate single session
@@ -240,7 +224,7 @@ func (s *service) LoginLocal(ctx context.Context, req LoginLocalCommand) (*Login
 		err := s.q.RevokeAllSessionsByUserID(ctx, userResponse.ID)
 		if err != nil {
 			s.log.Error().Err(err).Msg("failed to revoke all sessions")
-			return nil, domain.NewAppError(fiber.StatusInternalServerError, domain.ErrMsgInternalServerError, domain.ErrInternalServerError)
+			return LoginResponse{}, domain.NewAppError(fiber.StatusInternalServerError, domain.ErrMsgInternalServerError, domain.ErrInternalServerError)
 		}
 	}
 
@@ -255,7 +239,7 @@ func (s *service) LoginLocal(ctx context.Context, req LoginLocalCommand) (*Login
 	sessionID, err := utils.GenerateUUIDV7()
 	if err != nil {
 		s.log.Err(err).Msg("failed to generate uuid v7 for sessionID")
-		return nil, domain.NewAppError(fiber.StatusInternalServerError, domain.ErrMsgInternalServerError, domain.ErrInternalServerError)
+		return LoginResponse{}, domain.NewAppError(fiber.StatusInternalServerError, domain.ErrMsgInternalServerError, domain.ErrInternalServerError)
 	}
 	_, err = s.q.UpsertSession(ctx, repository.UpsertSessionParams{
 		ID:       sessionID,
@@ -281,10 +265,10 @@ func (s *service) LoginLocal(ctx context.Context, req LoginLocalCommand) (*Login
 			Str("user_id", userResponse.ID.String()).
 			Str("device_id", deviceID).
 			Msg("failed to create session")
-		return nil, domain.NewAppError(fiber.StatusInternalServerError, domain.ErrMsgInternalServerError, domain.ErrInternalServerError)
+		return LoginResponse{}, domain.NewAppError(fiber.StatusInternalServerError, domain.ErrMsgInternalServerError, domain.ErrInternalServerError)
 	}
 
-	return &LoginResult{
+	return LoginResponse{
 		User:         userResponse,
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
@@ -303,41 +287,18 @@ func (s *service) RegisterLocal(ctx context.Context, req RegisterCommand) error 
 
 	qtx := s.q.WithTx(tx)
 
-	// create user
-	id, err := utils.GenerateUUIDV7()
+	// create user with tx
+	user, err := s.userService.CreateUserWithTx(ctx, qtx, req.Email, req.Phone, req.Name, req.Nickname)
 	if err != nil {
-		s.log.Err(err).Msg("failed to generate uuid v7 for user")
-		return domain.NewAppError(fiber.StatusInternalServerError, domain.ErrMsgInternalServerError, domain.ErrInternalServerError)
-	}
-	user, err := qtx.CreateUser(ctx, repository.CreateUserParams{
-		ID:       id,
-		Email:    req.Email,
-		Phone:    utils.StringToPgTypeText(req.Phone),
-		Name:     req.Name,
-		Nickname: req.Nickname,
-	})
-	if err != nil {
-		if utils.IsDuplicateUniqueViolation(err) {
-			switch utils.PgConstraint(err) {
-			case "users_email_key":
-				return domain.NewAppError(fiber.StatusConflict, domain.ErrMsgEmailAlreadyExists, domain.ErrConflict)
-			case "users_phone_key":
-				return domain.NewAppError(fiber.StatusConflict, domain.ErrMsgPhoneAlreadyExists, domain.ErrConflict)
-			case "users_nickname_key":
-				return domain.NewAppError(fiber.StatusConflict, domain.ErrMsgNicknameAlreadyExists, domain.ErrConflict)
-			}
-		}
-		s.log.Err(err).Msg("failed to create user")
-		return domain.NewAppError(fiber.StatusInternalServerError, domain.ErrMsgInternalServerError, domain.ErrInternalServerError)
+		return err
 	}
 
-	// create user role
+	// create user role with tx
 	err = qtx.CreateUserRole(ctx, repository.CreateUserRoleParams{
 		UserID: user.ID,
 		RoleID: domain.CREATOR.ID, // creator
 	})
 	if err != nil {
-		s.log.Err(err).Msg("failed to create user role")
 		return domain.NewAppError(fiber.StatusInternalServerError, domain.ErrMsgInternalServerError, domain.ErrInternalServerError)
 	}
 

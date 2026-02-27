@@ -20,10 +20,10 @@ type LoginLocalCommand struct {
 	ClientInfo security.ClientInfo
 }
 
-type LoginResult struct {
-	User         domain.UserWithRoles
-	AccessToken  string
-	RefreshToken string
+type LoginResponse struct {
+	User         domain.UserWithRoles `json:"user"`
+	AccessToken  string               `json:"access_token"`
+	RefreshToken string               `json:"refresh_token"`
 }
 
 type RefreshCommand struct {
@@ -31,7 +31,7 @@ type RefreshCommand struct {
 	ClientInfo security.ClientInfo
 }
 
-type RefreshResult struct {
-	AccessToken  string
-	RefreshToken string
+type RefreshResponse struct {
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
 }

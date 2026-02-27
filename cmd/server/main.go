@@ -5,6 +5,7 @@ import (
 
 	authService "sakucita/internal/app/auth/service"
 	donationService "sakucita/internal/app/donation/service"
+	userService "sakucita/internal/app/user/service"
 	"sakucita/internal/infra/midtrans"
 	"sakucita/internal/infra/postgres"
 	"sakucita/internal/infra/postgres/repository"
@@ -58,12 +59,18 @@ func securityProvider(cfg config.App, log zerolog.Logger) *security.Security {
 type services struct {
 	authService     authService.AuthService
 	donationService donationService.DonationService
+	userService     userService.UserService
 }
 
 func serviceProvider(config config.App, log zerolog.Logger, infras *infras, queries *repository.Queries, security *security.Security) *services {
+	userService := userService.NewService(infras.postgres, infras.redis, queries, config, log)
+	authService := authService.NewService(userService, infras.postgres, infras.redis, queries, config, security, log)
+	donationService := donationService.NewService(infras.postgres, queries, log, infras.midtransClient)
+
 	return &services{
-		authService:     authService.NewService(infras.postgres, infras.redis, queries, config, security, log),
-		donationService: donationService.NewService(infras.postgres, queries, log, infras.midtransClient),
+		authService:     authService,
+		userService:     userService,
+		donationService: donationService,
 	}
 }
 
