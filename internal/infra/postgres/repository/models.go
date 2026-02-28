@@ -10,7 +10,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
-	"sakucita/internal/domain"
 )
 
 type DonationMediaType string
@@ -241,7 +240,7 @@ type AuthIdentity struct {
 	PasswordHash pgtype.Text
 	TotpSecret   pgtype.Text
 	TotpEnabled  bool
-	Meta         domain.JSONB
+	Meta         []byte
 	LastLoginAt  pgtype.Timestamptz
 	CreatedAt    pgtype.Timestamptz
 	UpdatedAt    pgtype.Timestamptz
@@ -263,7 +262,7 @@ type DonationMessage struct {
 	Amount            int64
 	Currency          string
 	Status            string
-	Meta              domain.JSONB
+	Meta              []byte
 	PlayedAt          pgtype.Timestamptz
 	CreatedAt         pgtype.Timestamptz
 }
@@ -292,7 +291,7 @@ type Session struct {
 	RefreshTokenID pgtype.UUID
 	ExpiresAt      pgtype.Timestamptz
 	Revoked        bool
-	Meta           domain.JSONB
+	Meta           []byte
 	CreatedAt      pgtype.Timestamptz
 	LastUsedAt     pgtype.Timestamptz
 }
@@ -332,7 +331,7 @@ type User struct {
 	Nickname      string
 	ImageUrl      pgtype.Text
 	SingleSession bool
-	Meta          domain.JSONB
+	Meta          []byte
 	CreatedAt     pgtype.Timestamptz
 	UpdatedAt     pgtype.Timestamptz
 	DeletedAt     pgtype.Timestamptz

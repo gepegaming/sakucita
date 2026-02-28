@@ -23,6 +23,15 @@ INSERT INTO transactions (
   $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19
 ) RETURNING *;
 
+-- name: GetByExternalReference :one
+SELECT * FROM transactions WHERE external_reference = $1 LIMIT 1;
+
+-- name: MarkTransactionAs :exec
+UPDATE transactions
+SET status = $2
+WHERE id = $1;
+
+
 -- name: UpdateTransactionExternalReferenceAndStatus :exec
 UPDATE transactions
 SET external_reference = $2, status = $3

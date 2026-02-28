@@ -14,11 +14,17 @@ func (j *JSONB) Scan(value any) error {
 		*j = make(map[string]any)
 		return nil
 	}
-	bytes, ok := value.([]byte)
-	if !ok {
+
+	switch v := value.(type) {
+	case []byte:
+		return json.Unmarshal(v, j)
+
+	case string:
+		return json.Unmarshal([]byte(v), j)
+
+	default:
 		return fmt.Errorf("invalid type for JSONB: %T", value)
 	}
-	return json.Unmarshal(bytes, j)
 }
 
 // Value implementasi untuk menyimpan ke database (map -> jsonb)

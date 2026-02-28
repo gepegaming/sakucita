@@ -5,6 +5,9 @@ import (
 
 	authService "sakucita/internal/app/auth/service"
 	donationService "sakucita/internal/app/donation/service"
+	feeService "sakucita/internal/app/fee/service"
+	paymentChannelService "sakucita/internal/app/paymentChannel/service"
+	transactionService "sakucita/internal/app/transaction/service"
 	userService "sakucita/internal/app/user/service"
 	"sakucita/internal/infra/midtrans"
 	"sakucita/internal/infra/postgres"
@@ -57,20 +60,29 @@ func securityProvider(cfg config.App, log zerolog.Logger) *security.Security {
 
 // service provider
 type services struct {
-	authService     authService.AuthService
-	donationService donationService.DonationService
-	userService     userService.UserService
+	authService           authService.AuthService
+	donationService       donationService.DonationService
+	userService           userService.UserService
+	feeService            feeService.FeeService
+	paymentChannelService paymentChannelService.PaymentChannelService
+	transactionService    transactionService.TransactionService
 }
 
 func serviceProvider(config config.App, log zerolog.Logger, infras *infras, queries *repository.Queries, security *security.Security) *services {
 	userService := userService.NewService(infras.postgres, infras.redis, queries, config, log)
 	authService := authService.NewService(userService, infras.postgres, infras.redis, queries, config, security, log)
-	donationService := donationService.NewService(infras.postgres, queries, log, infras.midtransClient)
+	feeService := feeService.NewService(queries, log)
+	paymentChannelService := paymentChannelService.NewService(queries, log)
+	transactionService := transactionService.NewService(queries, log)
+	donationService := donationService.NewService(infras.postgres, queries, log, infras.midtransClient, transactionService, feeService, userService, paymentChannelService)
 
 	return &services{
-		authService:     authService,
-		userService:     userService,
-		donationService: donationService,
+		authService:           authService,
+		userService:           userService,
+		donationService:       donationService,
+		feeService:            feeService,
+		paymentChannelService: paymentChannelService,
+		transactionService:    transactionService,
 	}
 }
 

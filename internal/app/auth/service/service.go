@@ -91,6 +91,15 @@ func (s *service) RefreshToken(ctx context.Context, req RefreshCommand) (Refresh
 	}
 
 	// create session
+	meta, err := utils.MapToByteSlice(map[string]any{
+		"ip":          req.ClientInfo.IP,
+		"user_agent":  req.ClientInfo.UserAgent,
+		"device_name": req.ClientInfo.DeviceName,
+	})
+	if err != nil {
+		s.log.Error().Err(err).Msg("failed to map meta to byte slice")
+		return RefreshResponse{}, domain.NewAppError(fiber.StatusInternalServerError, domain.ErrMsgInternalServerError, domain.ErrInternalServerError)
+	}
 	_, err = s.q.UpsertSession(ctx, repository.UpsertSessionParams{
 		UserID:   req.Claims.UserID,
 		DeviceID: deviceID,
@@ -102,11 +111,7 @@ func (s *service) RefreshToken(ctx context.Context, req RefreshCommand) (Refresh
 			Time:  rtClaims.ExpiresAt.Time,
 			Valid: true,
 		},
-		Meta: map[string]any{
-			"ip":          req.ClientInfo.IP,
-			"user_agent":  req.ClientInfo.UserAgent,
-			"device_name": req.ClientInfo.DeviceName,
-		},
+		Meta: meta,
 	})
 	if err != nil {
 		s.log.Error().Err(err).Msg("failed to create session")
@@ -125,24 +130,6 @@ func (s *service) Me(ctx context.Context, userID uuid.UUID) (domain.UserWithRole
 		s.log.Error().Err(err).Msg("failed to get user with roles")
 		return domain.UserWithRoles{}, domain.NewAppError(fiber.StatusNotFound, "user not found", domain.ErrNotfound)
 	}
-
-	// userResponse := &domain.UserWithRoles{
-	// 	User: domain.User{
-	// 		ID:            userWithRolesRow.ID,
-	// 		Email:         userWithRolesRow.Email,
-	// 		EmailVerified: userWithRolesRow.EmailVerified,
-	// 		Phone:         userWithRolesRow.Phone,
-	// 		Name:          userWithRolesRow.Name,
-	// 		Nickname:      userWithRolesRow.Nickname,
-	// 		ImageUrl:      userWithRolesRow.ImageUrl,
-	// 		SingleSession: userWithRolesRow.SingleSession,
-	// 		Meta:          userWithRolesRow.Meta,
-	// 		CreatedAt:     userWithRolesRow.CreatedAt,
-	// 		UpdatedAt:     userWithRolesRow.UpdatedAt,
-	// 		DeletedAt:     userWithRolesRow.DeletedAt,
-	// 	},
-	// 	Roles: userWithRolesRow.Roles,
-	// }
 
 	return userWithRolesRow, nil
 }
@@ -241,6 +228,15 @@ func (s *service) LoginLocal(ctx context.Context, req LoginLocalCommand) (LoginR
 		s.log.Err(err).Msg("failed to generate uuid v7 for sessionID")
 		return LoginResponse{}, domain.NewAppError(fiber.StatusInternalServerError, domain.ErrMsgInternalServerError, domain.ErrInternalServerError)
 	}
+	meta, err := utils.MapToByteSlice(map[string]any{
+		"ip":          req.ClientInfo.IP,
+		"user_agent":  req.ClientInfo.UserAgent,
+		"device_name": req.ClientInfo.DeviceName,
+	})
+	if err != nil {
+		s.log.Error().Err(err).Msg("failed to map meta to byte slice")
+		return LoginResponse{}, domain.NewAppError(fiber.StatusInternalServerError, domain.ErrMsgInternalServerError, domain.ErrInternalServerError)
+	}
 	_, err = s.q.UpsertSession(ctx, repository.UpsertSessionParams{
 		ID:       sessionID,
 		UserID:   userResponse.ID,
@@ -253,11 +249,7 @@ func (s *service) LoginLocal(ctx context.Context, req LoginLocalCommand) (LoginR
 			Time:  rtClaims.ExpiresAt.Time,
 			Valid: true,
 		},
-		Meta: map[string]any{
-			"ip":          req.ClientInfo.IP,
-			"user_agent":  req.ClientInfo.UserAgent,
-			"device_name": req.ClientInfo.DeviceName,
-		},
+		Meta: meta,
 	})
 	if err != nil {
 		s.log.Error().

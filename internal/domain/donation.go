@@ -7,22 +7,29 @@ import (
 )
 
 type DonationMessage struct {
-	ID                   uuid.UUID              `json:"id"`
-	PayeeUserID          uuid.UUID              `json:"payee_user_id"`
-	PayerUserID          *string                `json:"payer_user_id"`
-	PayerName            string                 `json:"payer_name"`
-	Message              string                 `json:"message"`
-	Email                string                 `json:"email"`
-	MediaType            string                 `json:"media_type"`
-	TTSLanguage          *string                `json:"tts_language"`
-	TTSVoice             *string                `json:"tts_voice"`
-	MediaProvider        *string                `json:"media_provider"`
-	MediaVideoID         *string                `json:"media_video_id"`
-	MediaStartSeconds    *int                   `json:"media_start_seconds"`
-	MediaEndSeconds      *int                   `json:"media_end_seconds"`
-	MediaDurationSeconds *int                   `json:"media_duration_seconds"`
-	PlayedAt             time.Time              `json:"played_at"`
-	Status               string                 `json:"status"`
-	Meta                 map[string]interface{} `json:"meta"`
-	CreatedAt            time.Time              `json:"created_at"`
+	ID          uuid.UUID `json:"id"`
+	PayeeUserID uuid.UUID `json:"payee_user_id"`
+
+	PayerUserID *uuid.UUID `json:"payer_user_id,omitempty"`
+
+	PayerName string `json:"payer_name"`
+	Email     string `json:"email"`
+	Message   string `json:"message"`
+
+	MediaType string `json:"media_type"`
+
+	MediaUrl          *string `json:"media_url,omitempty"`
+	MediaStartSeconds *int32  `json:"media_start_seconds,omitempty"`
+	MaxPlaySeconds    *int32  `json:"max_play_seconds,omitempty"`
+	PricePerSecond    *int64  `json:"price_per_second,omitempty"`
+
+	Amount   int64  `json:"amount"`
+	Currency string `json:"currency"`
+
+	Status string `json:"status"`
+
+	Meta map[string]any `json:"meta"`
+
+	PlayedAt  time.Time `json:"played_at,omitempty"`
+	CreatedAt time.Time `json:"created_at"`
 }

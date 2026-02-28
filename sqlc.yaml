@@ -10,8 +10,8 @@ sql:
         sql_package: "pgx/v5"
         emit_interface: true
         overrides:
-          - db_type: "jsonb"
-            nullable: true
-            go_type: "sakucita/internal/domain.JSONB"
+          # - db_type: "jsonb"
+          #   nullable: true
+          #   go_type: "sakucita/internal/domain.JSONB"
           - db_type: "uuid"
             go_type: "github.com/google/uuid.UUID"

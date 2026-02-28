@@ -1,10 +1,14 @@
 package service
 
-import "github.com/google/uuid"
+import (
+	"sakucita/internal/infra/postgres/repository"
+
+	"github.com/google/uuid"
+)
 
 type CreateDonationCommand struct {
 	PayeeUserID uuid.UUID
-	PayerUserID uuid.UUID
+	PayerUserID *uuid.UUID
 
 	PayerName string
 	Email     string
@@ -30,4 +34,20 @@ type CreateDonationResult struct {
 		Name string `json:"name"`
 		Url  string `json:"url"`
 	} `json:"actions,omitempty"`
+}
+
+type CreateDonationMessageCommand struct {
+	PayeeUserID       uuid.UUID
+	PayerUserID       *uuid.UUID
+	PayerName         string
+	Email             string
+	Message           string
+	MediaType         repository.DonationMediaType
+	MediaUrl          *string
+	MediaStartSeconds *int32
+	PricePerSecond    int64
+	GrossPaidAmount   int64
+	Amount            int64
+	Currency          string
+	Meta              []byte
 }

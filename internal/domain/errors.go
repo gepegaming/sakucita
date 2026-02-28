@@ -41,4 +41,12 @@ var (
 	ErrMsgSessionNotFound    = "session not found"
 	ErrMsgDeviceIdMissmatch  = "device id missmatch"
 	ErrMsgUnauthorized       = "unauthorized"
+
+	// transaction domain
+	ErrMsgTransactionNotFound = "transaction not found"
+
+	// donation domain
+	ErrMsgDonationMessageNotFound = "donation message not found"
+	ErrMsgDonationNotFound        = "donation not found"
+	ErrFailedToCreateDonation     = "failed to create donation"
 )

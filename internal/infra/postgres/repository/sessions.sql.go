@@ -10,7 +10,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
-	"sakucita/internal/domain"
 )
 
 const getActiveSessionByTokenID = `-- name: GetActiveSessionByTokenID :one
@@ -84,7 +83,7 @@ type UpsertSessionParams struct {
 	DeviceID       string
 	RefreshTokenID pgtype.UUID
 	ExpiresAt      pgtype.Timestamptz
-	Meta           domain.JSONB
+	Meta           []byte
 }
 
 func (q *Queries) UpsertSession(ctx context.Context, arg UpsertSessionParams) (Session, error) {

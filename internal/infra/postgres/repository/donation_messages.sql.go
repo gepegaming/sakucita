@@ -10,7 +10,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
-	"sakucita/internal/domain"
 )
 
 const createDonationMessage = `-- name: CreateDonationMessage :one
@@ -48,7 +47,7 @@ type CreateDonationMessageParams struct {
 	PricePerSecond    pgtype.Int8
 	Amount            int64
 	Currency          string
-	Meta              domain.JSONB
+	Meta              []byte
 }
 
 func (q *Queries) CreateDonationMessage(ctx context.Context, arg CreateDonationMessageParams) (DonationMessage, error) {

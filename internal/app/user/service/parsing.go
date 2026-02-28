@@ -4,11 +4,13 @@ import (
 	"encoding/json"
 	"sakucita/internal/domain"
 	"sakucita/internal/infra/postgres/repository"
+	"sakucita/internal/shared/utils"
 
 	"github.com/gofiber/fiber/v3"
 )
 
 func userRepoToUserDomain(u repository.User) domain.User {
+	meta, _ := utils.JSONBytesToMap(u.Meta)
 	return domain.User{
 		ID:            u.ID,
 		Email:         u.Email,
@@ -18,7 +20,7 @@ func userRepoToUserDomain(u repository.User) domain.User {
 		Nickname:      u.Nickname,
 		ImageUrl:      &u.ImageUrl.String,
 		SingleSession: u.SingleSession,
-		Meta:          u.Meta,
+		Meta:          meta,
 		CreatedAt:     u.CreatedAt.Time,
 		UpdatedAt:     u.UpdatedAt.Time,
 		DeletedAt:     u.DeletedAt.Time,
@@ -32,6 +34,8 @@ func userRepoWithRolesToUserDomain(u repository.GetUserByIDWithRolesRow) (domain
 			return domain.UserWithRoles{}, domain.NewAppError(fiber.StatusInternalServerError, domain.ErrMsgInternalServerError, domain.ErrInternalServerError)
 		}
 	}
+
+	meta, _ := utils.JSONBytesToMap(u.Meta)
 	return domain.UserWithRoles{
 		User: domain.User{
 			ID:            u.ID,
@@ -42,7 +46,7 @@ func userRepoWithRolesToUserDomain(u repository.GetUserByIDWithRolesRow) (domain
 			Nickname:      u.Nickname,
 			ImageUrl:      &u.ImageUrl.String,
 			SingleSession: u.SingleSession,
-			Meta:          u.Meta,
+			Meta:          meta,
 			CreatedAt:     u.CreatedAt.Time,
 			UpdatedAt:     u.UpdatedAt.Time,
 			DeletedAt:     u.DeletedAt.Time,

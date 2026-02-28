@@ -9,8 +9,8 @@ import (
 )
 
 type CreateDonationRequest struct {
-	PayeeUserID uuid.UUID `json:"payee_user_id" form:"payee_user_id"`
-	PayerUserID uuid.UUID `json:"payer_user_id,omitempty" form:"payer_user_id"`
+	PayeeUserID uuid.UUID  `json:"payee_user_id" form:"payee_user_id"`
+	PayerUserID *uuid.UUID `json:"payer_user_id,omitempty" form:"payer_user_id"`
 
 	PayerName string `json:"payer_name" form:"payer_name"`
 	Email     string `json:"email" form:"email"`
@@ -32,6 +32,10 @@ func (r *CreateDonationRequest) Validate() error {
 	// Basic field validations
 	if r.PayeeUserID == uuid.Nil {
 		return errors.New("PayeeUserID is required")
+	}
+
+	if r.PayerUserID != nil && r.PayeeUserID == *r.PayerUserID {
+		return errors.New("PayeeUserID cannot be the same as PayerUserID")
 	}
 
 	if r.PayerName == "" {

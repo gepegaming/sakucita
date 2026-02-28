@@ -111,6 +111,41 @@ func (q *Queries) CreateTransaction(ctx context.Context, arg CreateTransactionPa
 	return i, err
 }
 
+const getByExternalReference = `-- name: GetByExternalReference :one
+SELECT id, donation_message_id, payment_channel_id, payer_user_id, payee_user_id, gross_paid_amount, gateway_fee_fixed, gateway_fee_percentage_bps, gateway_fee_amount, platform_fee_fixed, platform_fee_percentage_bps, platform_fee_amount, fee_fixed, fee_percentage_bps, fee_amount, net_amount, currency, status, external_reference, meta, created_at, paid_at, settled_at FROM transactions WHERE external_reference = $1 LIMIT 1
+`
+
+func (q *Queries) GetByExternalReference(ctx context.Context, externalReference pgtype.Text) (Transaction, error) {
+	row := q.db.QueryRow(ctx, getByExternalReference, externalReference)
+	var i Transaction
+	err := row.Scan(
+		&i.ID,
+		&i.DonationMessageID,
+		&i.PaymentChannelID,
+		&i.PayerUserID,
+		&i.PayeeUserID,
+		&i.GrossPaidAmount,
+		&i.GatewayFeeFixed,
+		&i.GatewayFeePercentageBps,
+		&i.GatewayFeeAmount,
+		&i.PlatformFeeFixed,
+		&i.PlatformFeePercentageBps,
+		&i.PlatformFeeAmount,
+		&i.FeeFixed,
+		&i.FeePercentageBps,
+		&i.FeeAmount,
+		&i.NetAmount,
+		&i.Currency,
+		&i.Status,
+		&i.ExternalReference,
+		&i.Meta,
+		&i.CreatedAt,
+		&i.PaidAt,
+		&i.SettledAt,
+	)
+	return i, err
+}
+
 const getTransactionByDonationMessageID = `-- name: GetTransactionByDonationMessageID :one
 SELECT id, donation_message_id, payment_channel_id, payer_user_id, payee_user_id, gross_paid_amount, gateway_fee_fixed, gateway_fee_percentage_bps, gateway_fee_amount, platform_fee_fixed, platform_fee_percentage_bps, platform_fee_amount, fee_fixed, fee_percentage_bps, fee_amount, net_amount, currency, status, external_reference, meta, created_at, paid_at, settled_at FROM transactions WHERE donation_message_id = $1 LIMIT 1
 `
@@ -214,6 +249,22 @@ func (q *Queries) GetTransactionByID(ctx context.Context, id uuid.UUID) (Transac
 		&i.SettledAt,
 	)
 	return i, err
+}
+
+const markTransactionAs = `-- name: MarkTransactionAs :exec
+UPDATE transactions
+SET status = $2
+WHERE id = $1
+`
+
+type MarkTransactionAsParams struct {
+	ID     uuid.UUID
+	Status TransactionStatus
+}
+
+func (q *Queries) MarkTransactionAs(ctx context.Context, arg MarkTransactionAsParams) error {
+	_, err := q.db.Exec(ctx, markTransactionAs, arg.ID, arg.Status)
+	return err
 }
 
 const updateTransactionExternalReferenceAndStatus = `-- name: UpdateTransactionExternalReferenceAndStatus :exec

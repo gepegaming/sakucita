@@ -16,7 +16,7 @@ import (
 
 type UserService interface {
 	CreateUserWithTx(ctx context.Context, qtx repository.Querier, email, phone, name, nickname string) (domain.User, error)
-	GetByID(ctx context.Context, id uuid.UUID) (domain.User, error)
+	GetByIDWithTx(ctx context.Context, qtx repository.Querier, id uuid.UUID) (domain.User, error)
 	GetByIDWithRoles(ctx context.Context, id uuid.UUID) (domain.UserWithRoles, error)
 	GetByEmail(ctx context.Context, email string) (domain.User, error)
 
@@ -80,9 +80,13 @@ func (s *userService) CreateUserWithTx(ctx context.Context, qtx repository.Queri
 	return userRepoToUserDomain(user), nil
 }
 
-func (s *userService) GetByID(ctx context.Context, id uuid.UUID) (domain.User, error) {
-	user, err := s.q.GetUserByID(ctx, id)
+func (s *userService) GetByIDWithTx(ctx context.Context, qtx repository.Querier, id uuid.UUID) (domain.User, error) {
+	user, err := qtx.GetUserByID(ctx, id)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return domain.User{}, domain.NewAppError(fiber.StatusNotFound, domain.ErrMsgUserNotFound, domain.ErrNotfound)
+		}
+		s.log.Err(err).Msg("failed to get user by id")
 		return domain.User{}, err
 	}
 	return userRepoToUserDomain(user), nil

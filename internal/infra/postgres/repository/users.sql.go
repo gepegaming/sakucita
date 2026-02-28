@@ -10,7 +10,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
-	"sakucita/internal/domain"
 )
 
 const createUser = `-- name: CreateUser :one
@@ -134,7 +133,7 @@ type GetUserByIDWithRolesRow struct {
 	Nickname      string
 	ImageUrl      pgtype.Text
 	SingleSession bool
-	Meta          domain.JSONB
+	Meta          []byte
 	CreatedAt     pgtype.Timestamptz
 	UpdatedAt     pgtype.Timestamptz
 	DeletedAt     pgtype.Timestamptz
